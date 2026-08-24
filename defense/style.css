@@ -7,3 +7,15 @@
 .start{box-shadow:0 7px 20px #0005}
 
 @media(max-width:600px){.message{top:8px;font-size:10px;padding:7px 10px}.game-wrap{padding:6px}.board-card{border-radius:10px}.panel{padding:12px;border-radius:12px}}
+
+.build-version{
+  position:fixed;
+  right:10px;
+  bottom:8px;
+  z-index:9999;
+  color:rgba(255,255,255,.48);
+  font:900 9px system-ui,sans-serif;
+  letter-spacing:1px;
+  pointer-events:none;
+}
+header .build-version{position:static;margin-left:auto}
