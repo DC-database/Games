@@ -1,14 +1,9 @@
-// Optional Firebase configuration.
-// The game works without Firebase using localStorage.
-// To enable a global leaderboard, add your Firebase config below and
-// replace the local saveScore/renderScores logic with Firestore/Realtime DB calls.
-
 export const firebaseConfig = {
-  apiKey: "YOUR_API_KEY",
-  authDomain: "YOUR_PROJECT.firebaseapp.com",
-  databaseURL: "https://YOUR_PROJECT-default-rtdb.firebaseio.com",
-  projectId: "YOUR_PROJECT_ID",
-  storageBucket: "YOUR_PROJECT.firebasestorage.app",
-  messagingSenderId: "YOUR_SENDER_ID",
-  appId: "YOUR_APP_ID"
+  apiKey: "AIzaSyC2jNNzAkghmVE6KLOeGPtd3CCTzpw3qo",
+  authDomain: "leaderboard-90b9b.firebaseapp.com",
+  projectId: "leaderboard-90b9b",
+  storageBucket: "leaderboard-90b9b.firebasestorage.app",
+  messagingSenderId: "891059392275",
+  appId: "1:891059392275:web:757305992c2d83d39214e6",
+  measurementId: "G-RXNVYRFXC5"
 };

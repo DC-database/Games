@@ -1,161 +1,44 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>Realm Defense</title>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>IRWFLIX Defense v2.0</title>
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
-<div id="app">
-  <header class="topbar">
-    <div>
-      <div class="eyebrow">REALM DEFENSE</div>
-      <h1>Forest Outpost</h1>
-    </div>
-    <div class="stats">
-      <div class="stat"><span>❤️</span><b id="lives">20</b></div>
-      <div class="stat"><span>💰</span><b id="gold">250</b></div>
-      <div class="stat"><span>🌊</span><b id="wave">0/20</b></div>
-      <div class="stat"><span>🏆</span><b id="score">0</b></div>
-    </div>
-  </header>
-
-  <main class="game-wrap">
-    <section class="board-card">
-      <canvas id="game" width="1100" height="650"></canvas>
-      <div id="message" class="message">Build your defenses.</div>
-    </section>
-
-    <aside class="panel">
-      <div class="panel-head">
-        <div>
-          <div class="eyebrow">COMMAND</div>
-          <h2>Build Towers</h2>
-        </div>
-        <button id="startBtn" class="start">START WAVE</button>
-      </div>
-
-      <div class="tower-grid">
-        <button class="tower selected" data-type="arrow">
-          <span class="tower-icon">🏹</span><span><b>Archer</b><small>Fast • $75</small></span>
-        </button>
-        <button class="tower" data-type="cannon">
-          <span class="tower-icon">💣</span><span><b>Cannon</b><small>Area • $125</small></span>
-        </button>
-        <button class="tower" data-type="mage">
-          <span class="tower-icon">🔮</span><span><b>Mage</b><small>Strong • $175</small></span>
-        </button>
-      </div>
-
-      <div class="selected-card">
-        <div class="selected-title"><span id="selIcon">🏹</span><div><b id="selName">Archer Tower</b><small id="selDesc">Fast single-target defense</small></div></div>
-        <div class="upgrade-row">
-          <button id="upgradeBtn">UPGRADE <span id="upgradeCost">$100</span></button>
-          <button id="sellBtn" class="danger">SELL</button>
-        </div>
-      </div>
-
-      <div class="help">
-        <b>How to play</b>
-        <p>Choose a tower, then click an empty build pad. Start each wave and defend the crystal.</p>
-        <p>Click a placed tower to select it. Upgrade it as you earn gold.</p>
-      </div>
-
-      <div class="leaderboard">
-        <div class="lb-head"><b>LEADERBOARD</b><span>GLOBAL</span></div>
-        <div id="scores"></div>
-      </div>
-    </aside>
-  </main>
-
-  <footer>Realm Defense • Prototype 1.0 • Firebase-ready</footer>
+<div class="app">
+<header class="topbar">
+  <div><div class="eyebrow">IRWFLIX PLAY • DEFENSE v2.0</div><h1>Forest Outpost</h1></div>
+  <div class="stats">
+    <div class="stat"><span>❤️</span><b id="lives">20</b></div>
+    <div class="stat"><span>💰</span><b id="gold">350</b></div>
+    <div class="stat"><span>🌊</span><b id="wave">0/20</b></div>
+    <div class="stat"><span>🏆</span><b id="score">0</b></div>
+  </div>
+</header>
+<main class="layout">
+<section class="board-card">
+  <div class="canvas-wrap"><canvas id="game" width="1100" height="650"></canvas><div id="bossBanner" class="boss-banner"></div><div id="toast" class="toast"></div></div>
+</section>
+<aside class="panel">
+  <div class="panel-head"><div><div class="eyebrow">COMMAND</div><h2>Build Towers</h2></div><button id="startBtn" class="primary">START WAVE</button></div>
+  <div class="tower-grid">
+    <button class="tower-card" data-type="archer"><img src="assets/towers/set_2_archer_level_1.png"><span><b>Archer</b><small>Fast • $75</small></span></button>
+    <button class="tower-card" data-type="cannon"><img src="assets/towers/set_2_cannon_level_1.png"><span><b>Cannon</b><small>Area • $125</small></span></button>
+    <button class="tower-card" data-type="mage"><img src="assets/towers/set_2_mage_level_1.png"><span><b>Mage</b><small>Magic • $175</small></span></button>
+    <button class="tower-card" data-type="barracks"><img src="assets/towers/set_2_barracks_level_1.png"><span><b>Barracks</b><small>Guard • $150</small></span></button>
+  </div>
+  <div class="selected-card" id="selectedCard"><div class="selected-title"><div><b id="selName">No tower selected</b><small id="selDesc">Drag a tower onto a glowing build pad.</small></div></div><div class="upgrade-row"><button id="upgradeBtn">UPGRADE</button><button id="sellBtn" class="danger">SELL</button></div><div id="towerStats" class="tower-stats"></div></div>
+  <div class="hero-card"><div><div class="eyebrow">HERO</div><b id="heroName">IRWFLIX Hero</b><small id="heroLevel">Level 1 / 10</small></div><button id="heroDrag" class="hero-drag">DRAG HERO</button></div>
+  <div class="rush"><div><b>⚡ BATTLE RUSH</b><span id="rushText">Ready when a wave begins</span></div><strong id="rushTimer">—</strong></div>
+  <button id="submitBtn" class="submit">SUBMIT SCORE</button>
+  <div class="leaderboard"><div class="lb-head"><b>GLOBAL LEADERBOARD</b><span>Firebase</span></div><div id="scores">Loading…</div></div>
+  <div class="help"><b>How to play</b><p>Drag a tower card onto a glowing pad. Tap a placed tower to upgrade or sell it. Drag the hero around the battlefield.</p><p>Every wave has a boss. Survive, build combos, and use the 60-second Battle Rush for high scores.</p></div>
+</aside>
+</main>
+<footer>IRWFLIX Defense v2.0 • 20 waves • boss every wave • hero Lv1–10 • tower Lv1–5</footer>
 </div>
+<div id="gameOver" class="modal hidden"><div class="modal-card"><div class="eyebrow">RUN COMPLETE</div><h2 id="endTitle">Game Over</h2><div class="final-score" id="finalScore">0</div><p id="finalMeta"></p><div class="modal-actions"><button id="submitEnd" class="primary">SUBMIT SCORE</button><button id="restart" class="secondary">PLAY AGAIN</button></div></div></div>
 <script type="module" src="game.js"></script>
-
-<script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
-import { getFirestore, collection, addDoc, getDocs, query, limit } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
-
-const firebaseConfig = {
-  apiKey: "AIzaSyC2jNNzAk5ghmVE6KLOeGPtd3CCTzpw3qo",
-  authDomain: "leaderboard-90b9b.firebaseapp.com",
-  projectId: "leaderboard-90b9b",
-  storageBucket: "leaderboard-90b9b.firebasestorage.app",
-  messagingSenderId: "891059392275",
-  appId: "1:891059392275:web:757305992c2d83d39214e6",
-  measurementId: "G-RXNVYRFXC5"
-};
-
-const db = getFirestore(initializeApp(firebaseConfig));
-const defensePlayer = localStorage.getItem("defensePlayer") || localStorage.getItem("memoryPlayer") || "Player";
-localStorage.setItem("defensePlayer", defensePlayer);
-
-window.saveDefenseScoreToFirebase = async function(score, wave, reason) {
-  try {
-    await addDoc(collection(db, "leaderboard"), {
-      game: "defense",
-      name: defensePlayer,
-      score: Number(score) || 0,
-      wave: Number(wave) || 0,
-      reason: reason || "game-over",
-      createdAt: Date.now()
-    });
-    return true;
-  } catch (e) {
-    console.error("Defense Firebase leaderboard save failed:", e);
-    return false;
-  }
-};
-
-window.loadDefenseTop10 = async function() {
-  try {
-    const snap = await getDocs(query(collection(db, "leaderboard"), limit(1000)));
-    const rows = [];
-    snap.forEach(d => {
-      const x = d.data();
-      if (x.game === "defense") rows.push(x);
-    });
-    rows.sort((a,b) => Number(b.score||0) - Number(a.score||0));
-    return rows.slice(0,10);
-  } catch (e) {
-    console.error("Defense leaderboard load failed:", e);
-    return [];
-  }
-};
-</script>
-
-
-<script>
-window.__defenseFirebaseSaved = false;
-window.__saveDefenseFinalScore = async function(reason) {
-  if (window.__defenseFirebaseSaved) return;
-  window.__defenseFirebaseSaved = true;
-  try {
-    const score =
-      (typeof window.score === "number" ? window.score : null) ??
-      (typeof score !== "undefined" ? score : 0);
-    const wave =
-      (typeof window.wave === "number" ? window.wave : null) ??
-      (typeof wave !== "undefined" ? wave : 0);
-    if (typeof window.saveDefenseScoreToFirebase === "function") {
-      await window.saveDefenseScoreToFirebase(score, wave, reason);
-    }
-  } catch(e) { console.error(e); }
-};
-</script>
-
-
-<script>
-document.addEventListener("click", e=>{
-  const t=e.target;
-  if(!t)return;
-  const txt=(t.textContent||"").trim().toLowerCase();
-  if(txt==="game over" || txt.includes("play again") || txt.includes("restart")){
-    if(window.__saveDefenseFinalScore) window.__saveDefenseFinalScore("game-over");
-  }
-});
-</script>
-
-</body>
-</html>
+</body></html>
