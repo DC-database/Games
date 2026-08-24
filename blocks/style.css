@@ -353,3 +353,59 @@ button{border:0;border-radius:11px;padding:12px 16px;font-weight:1000;cursor:poi
   .score-pop{font-size:22px}
   .clear-spark{width:6px;height:6px}
 }
+
+/* v18: polished clear feedback */
+.clear-flash{
+ position:fixed;pointer-events:none;z-index:99990;
+ border-radius:18px;
+ background:radial-gradient(circle at 50% 45%,#fff8,transparent 58%);
+ animation:boardFlash .34s ease-out forwards;
+}
+@keyframes boardFlash{0%{opacity:0}20%{opacity:1}100%{opacity:0}}
+.cell.clear-pop{
+ animation:blockClearBig .3s cubic-bezier(.2,.9,.3,1) forwards;
+ z-index:4;
+}
+@keyframes blockClearBig{
+ 0%{transform:scale(1);filter:brightness(1)}
+ 35%{transform:scale(1.2);filter:brightness(2.3)}
+ 100%{transform:scale(.05);opacity:0;filter:brightness(3)}
+}
+.confetti{
+ position:fixed;width:8px;height:12px;border-radius:2px;
+ pointer-events:none;z-index:100001;
+ transform:translate(-50%,-50%);
+ animation:confettiFly .9s cubic-bezier(.12,.75,.25,1) forwards;
+}
+@keyframes confettiFly{
+ 0%{transform:translate(-50%,-50%) scale(.2) rotate(0);opacity:1}
+ 100%{transform:translate(calc(-50% + var(--dx)),calc(-50% + var(--dy))) scale(1) rotate(var(--rot));opacity:0}
+}
+.big-score-pop{
+ position:fixed;pointer-events:none;z-index:100002;
+ transform:translate(-50%,-50%) scale(.5);
+ text-align:center;text-shadow:0 4px 16px #000b;
+ animation:bigScore .95s cubic-bezier(.18,1.2,.25,1) forwards;
+}
+.big-score-pop b{display:block;font-size:42px;line-height:1;color:#fff}
+.big-score-pop span{display:block;margin-top:6px;font-size:14px;font-weight:1000;letter-spacing:3px;color:#ffe77a}
+@keyframes bigScore{
+ 0%{transform:translate(-50%,-50%) scale(.45);opacity:0}
+ 18%{transform:translate(-50%,-50%) scale(1.18);opacity:1}
+ 70%{transform:translate(-50%,-72%) scale(1);opacity:1}
+ 100%{transform:translate(-50%,-105%) scale(.92);opacity:0}
+}
+@media(max-width:800px){
+ .big-score-pop b{font-size:36px}
+ .big-score-pop span{font-size:12px}
+}
+
+.build-version{
+  margin-left:auto;
+  color:#657286;
+  font-size:9px;
+  font-weight:900;
+  letter-spacing:1px;
+  opacity:.8;
+}
+@media(max-width:800px){.build-version{font-size:8px}}

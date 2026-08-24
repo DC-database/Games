@@ -29,7 +29,7 @@ const SHAPES=[
 
 let board=[],pieces=[],score=0,best=Number(localStorage.blocksBest||0);
 let player=(localStorage.blocksPlayer||"").trim();
-let dragging=null,dragGhost=null,activePointerId=null,touchDragIndex=null,touchActive=false;
+let dragging=null,dragGhost=null,activePointerId=null,touchDragIndex=null,touchActive=false,clearAnimating=false;
 
 const $=id=>document.getElementById(id);
 function ensurePlayer(){
@@ -162,73 +162,132 @@ function cancelDrag(){
 }
 function endDrag(e){
  if(!dragging)return;
- const p=dragging,target=dragPoint(e.clientX,e.clientY),cell=cellFromPoint(target.x,target.y),can=!!cell&&fit(p.shape,cell.r,cell.c);
- if(can){
-  p.shape.forEach(([x,y])=>board[cell.r+y][cell.c+x]=p.color);
-  const lines=clearLines();score+=p.shape.length*10;
-  if(lines)score+=lines===1?100:lines===2?250:500+lines*100;
-  best=Math.max(best,score);localStorage.blocksBest=best;
-  $("message").textContent=lines?`✨ ${lines} line${lines>1?"s":""} cleared!`:"Good move. Keep building.";
-  p.used=true;if(pieces.every(x=>x.used))pieces=[makePiece(),makePiece(),makePiece()];
- }else $("message").textContent="Not placed — move to a valid position and release.";
+ const p=dragging;
+ const target=dragPoint(e.clientX,e.clientY);
+ const cell=cellFromPoint(target.x,target.y);
+ const can=!!cell&&fit(p.shape,cell.r,cell.c);
+
+ if(!can){
+   $("message").textContent="Move over a valid position and release.";
+   if(dragGhost)dragGhost.remove();
+   dragGhost=null;clearPreview();dragging=null;activePointerId=null;
+   document.querySelectorAll(".piece.selected").forEach(e=>e.classList.remove("selected"));
+   render();
+   return;
+ }
+
+ p.shape.forEach(([x,y])=>board[cell.r+y][cell.c+x]=p.color);
+ p.used=true;
+
+ const lines=findCompletedLines();
+ let gained=p.shape.length*10;
+ if(lines.count)gained+=lines.count===1?100:lines.count===2?250:500+lines.count*100;
+
+ score+=gained;
+ best=Math.max(best,score);localStorage.blocksBest=best;
+
  if(dragGhost)dragGhost.remove();
- dragGhost=null;clearPreview();dragging=null;activePointerId=null;document.querySelectorAll(".piece.selected").forEach(e=>e.classList.remove("selected"));render();
- if(can){
-  const possible=pieces.some(p=>!p.used&&board.some((row,r)=>row.some((_,c)=>fit(p.shape,r,c))));
-  if(!possible)gameOver();
+ dragGhost=null;clearPreview();dragging=null;activePointerId=null;
+ document.querySelectorAll(".piece.selected").forEach(e=>e.classList.remove("selected"));
+
+ if(lines.count){
+   $("message").textContent=`✨ ${lines.count} line${lines.count>1?"s":""} clearing!`;
+   render();
+   animateClearCells(lines.cells,()=>{
+     removeCompletedLines(lines);
+     celebrateClear(gained,lines.count,lines.cells);
+     $("message").textContent=`🎉 ${lines.count} line${lines.count>1?"s":""} cleared!`;
+     if(pieces.every(x=>x.used))pieces=[makePiece(),makePiece(),makePiece()];
+     render();
+     const possible=pieces.some(p=>!p.used&&board.some((row,r)=>row.some((_,c)=>fit(p.shape,r,c))));
+     if(!possible)gameOver();
+   });
+ }else{
+   if(pieces.every(x=>x.used))pieces=[makePiece(),makePiece(),makePiece()];
+   animateScoreValue(score-gained,score,220);
+   $("message").textContent="Good move. Keep building.";
+   render();
+   const possible=pieces.some(p=>!p.used&&board.some((row,r)=>row.some((_,c)=>fit(p.shape,r,c))));
+   if(!possible)gameOver();
  }
 }
 
-function showScorePop(points, combo, cells){
-  const board=$("board");
-  const r=board.getBoundingClientRect();
-  const centerX=r.left+r.width/2;
-  const centerY=r.top+r.height*.42;
-  const el=document.createElement("div");
-  el.className="score-pop";
-  el.textContent="+"+points+(combo>1?"  ×"+combo:"");
-  el.style.left=centerX+"px";
-  el.style.top=centerY+"px";
-  document.body.appendChild(el);
-  setTimeout(()=>el.remove(),800);
-
-  // small burst from the cleared cells
-  const targets=cells.slice(0,28);
-  targets.forEach(([x,y],i)=>{
-    const c=board.querySelector(`[data-x="${x}"][data-y="${y}"]`);
-    if(!c)return;
-    const cr=c.getBoundingClientRect();
-    for(let k=0;k<2;k++){
-      const s=document.createElement("i");
-      s.className="clear-spark";
-      s.style.left=(cr.left+cr.width/2)+"px";
-      s.style.top=(cr.top+cr.height/2)+"px";
-      s.style.color=getComputedStyle(c).backgroundColor||"#fff";
-      const a=(Math.PI*2*(i*2+k)/Math.max(1,targets.length*2));
-      const d=28+Math.random()*42;
-      s.style.setProperty("--dx",Math.cos(a)*d+"px");
-      s.style.setProperty("--dy",Math.sin(a)*d+"px");
-      document.body.appendChild(s);
-      setTimeout(()=>s.remove(),520);
-    }
-  });
+function animateScoreValue(from,to,duration=520){
+ const el=$("score");
+ const start=performance.now();
+ const tick=(now)=>{
+   const p=Math.min(1,(now-start)/duration);
+   const eased=1-Math.pow(1-p,3);
+   el.textContent=Math.round(from+(to-from)*eased).toLocaleString();
+   if(p<1)requestAnimationFrame(tick);
+ };
+ requestAnimationFrame(tick);
 }
-function animateClearCells(cells, done){
-  const board=$("board");
-  cells.forEach(([x,y])=>{
-    const c=board.querySelector(`[data-x="${x}"][data-y="${y}"]`);
-    if(c)c.classList.add("clear-pop");
-  });
-  setTimeout(done,250);
+function celebrateClear(points, lines, cells){
+ const board=$("board");
+ const rect=board.getBoundingClientRect();
+
+ // Strong board flash.
+ const flash=document.createElement("div");
+ flash.className="clear-flash";
+ flash.style.left=rect.left+"px";
+ flash.style.top=rect.top+"px";
+ flash.style.width=rect.width+"px";
+ flash.style.height=rect.height+"px";
+ document.body.appendChild(flash);
+ setTimeout(()=>flash.remove(),360);
+
+ // Large confetti/firework burst.
+ const cx=rect.left+rect.width/2, cy=rect.top+rect.height*.42;
+ const colors=["#ff4f9a","#8d62ff","#39b8ff","#41d68a","#ffd34f","#ff5b54","#fff"];
+ for(let i=0;i<55;i++){
+   const p=document.createElement("i");
+   p.className="confetti";
+   p.style.left=cx+"px"; p.style.top=cy+"px";
+   p.style.background=colors[i%colors.length];
+   const a=(Math.PI*2*i/55)+(Math.random()-.5)*.3;
+   const d=45+Math.random()*150;
+   p.style.setProperty("--dx",Math.cos(a)*d+"px");
+   p.style.setProperty("--dy",Math.sin(a)*d-30+"px");
+   p.style.setProperty("--rot",(Math.random()*720-360)+"deg");
+   document.body.appendChild(p);
+   setTimeout(()=>p.remove(),950);
+ }
+
+ // Big visible score pop.
+ const pop=document.createElement("div");
+ pop.className="big-score-pop";
+ pop.innerHTML=`<b>+${points.toLocaleString()}</b><span>${lines>1?"COMBO ×"+lines:"CLEAR!"}</span>`;
+ pop.style.left=cx+"px"; pop.style.top=(cy-15)+"px";
+ document.body.appendChild(pop);
+ setTimeout(()=>pop.remove(),1050);
+
+ const oldScore=score-points;
+ animateScoreValue(oldScore,score);
+}
+function animateClearCells(cells,done){
+ const board=$("board");
+ cells.forEach(([r,c])=>{
+   const el=board.querySelector(`.cell[data-r="${r}"][data-c="${c}"]`);
+   if(el)el.classList.add("clear-pop");
+ });
+ setTimeout(done,300);
 }
 
-function clearLines(){
- let rows=[],cols=[];
+function findCompletedLines(){
+ let rows=[],cols=[],cells=[];
  for(let r=0;r<N;r++)if(board[r].every(Boolean))rows.push(r);
  for(let c=0;c<N;c++)if(board.every(row=>row[c]))cols.push(c);
- rows.forEach(r=>board[r].fill(null));cols.forEach(c=>board.forEach(row=>row[c]=null));
- return rows.length+cols.length;
+ rows.forEach(r=>{for(let c=0;c<N;c++)cells.push([r,c])});
+ cols.forEach(c=>{for(let r=0;r<N;r++)cells.push([r,c])});
+ const unique=[...new Map(cells.map(x=>[x.join(","),x])).values()];
+ return {rows,cols,cells:unique,count:rows.length+cols.length};
 }
+function removeCompletedLines(lines){
+ lines.rows.forEach(r=>board[r].fill(null));
+ lines.cols.forEach(c=>board.forEach(row=>row[c]=null));
+}
+
 function miniFor(sh,x,y,color){
  const m=document.createElement("i");m.className="mini";
  const on=sh.some(([sx,sy])=>sx===x&&sy===y);
@@ -269,9 +328,12 @@ async function submitScore(){
 async function loadLeaderboard(){
  const status=$("lbStatus"),list=$("lbList");
  try{
-  const q=query(collection(db,"leaderboard"),orderBy("score","desc"),limit(10)),snap=await getDocs(q);
+  const q=query(collection(db,"leaderboard"),limit(200)),snap=await getDocs(q);
+  const rows=[];
+  snap.forEach(d=>{const x=d.data();if(x.game==="blocks")rows.push(x)});
+  rows.sort((a,b)=>Number(b.score||0)-Number(a.score||0));
   list.innerHTML="";let i=1;
-  snap.forEach(d=>{const x=d.data();if(x.game!=="blocks")return;const li=document.createElement("li");li.innerHTML=`<span>${i++}</span><b>${escapeHtml(String(x.name||"Player"))}</b><span class="lb-score">${Number(x.score||0).toLocaleString()}</span>`;list.appendChild(li)});
+  rows.slice(0,10).forEach(x=>{const li=document.createElement("li");li.innerHTML=`<span>${i++}</span><b>${escapeHtml(String(x.name||"Player"))}</b><span class="lb-score">${Number(x.score||0).toLocaleString()}</span>`;list.appendChild(li)});
   status.textContent=list.children.length?"Top 10":"No scores yet.";
  }catch(err){console.error(err);status.textContent="Leaderboard not connected yet."}
 }
