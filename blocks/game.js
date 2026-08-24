@@ -96,6 +96,9 @@ function startDrag(index,e){
  const p=pieces[index];
  if(p.used)return;
  e.preventDefault();
+ if(e.pointerType==="touch" && e.currentTarget.setPointerCapture){
+   try{e.currentTarget.setPointerCapture(e.pointerId)}catch(_){}
+ }
  dragging=p;
  e.currentTarget.classList.add("selected");
  makeGhost(p,e.clientX,e.clientY);
@@ -200,3 +203,4 @@ document.addEventListener("pointercancel",e=>{
 $("new").onclick=newGame;
 $("again").onclick=newGame;
 newGame();
+document.addEventListener("contextmenu",e=>{if(dragging)e.preventDefault()});
