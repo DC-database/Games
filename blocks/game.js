@@ -64,19 +64,33 @@ function cellFromPoint(x,y){
  return r>=0&&r<N&&c>=0&&c<N?{r,c}:null;
 }
 function dragPoint(x,y){
- // Finger is free to move anywhere. The floating piece stays above it.
- return {x:x,y:y-72};
+ // Project the finger onto the board. The finger may stay completely
+ // outside the board; the logical piece position is clamped to the board.
+ const rect=$("board").getBoundingClientRect();
+ const pad=9;
+ const minX=rect.left+pad, maxX=rect.right-pad;
+ const minY=rect.top+pad, maxY=rect.bottom-pad;
+ return {
+   x:Math.max(minX,Math.min(maxX,x)),
+   y:Math.max(minY,Math.min(maxY,y-72))
+ };
 }
-function clearPreview(){document.querySelectorAll(".cell.preview,.cell.invalid").forEach(e=>e.classList.remove("preview","invalid"))}
+function clearPreview(){
+ document.querySelectorAll(".cell.preview,.cell.invalid").forEach(e=>e.classList.remove("preview","invalid"));
+}
 function showPreview(point){
  clearPreview();if(!dragging)return;
  const cell=cellFromPoint(point.x,point.y);if(!cell)return;
  const valid=fit(dragging.shape,cell.r,cell.c);
+ dragging._dragCell=cell;
  dragging.shape.forEach(([x,y])=>{
   const rr=cell.r+y,cc=cell.c+x;
   if(rr>=0&&rr<N&&cc>=0&&cc<N){
    const e=document.querySelector(`.cell[data-r="${rr}"][data-c="${cc}"]`);
-   if(e){e.classList.add(valid?"preview":"invalid");if(valid)e.style.setProperty("--preview",dragging.color+"88")}
+   if(e){
+    e.classList.add(valid?"preview":"invalid");
+    if(valid)e.style.setProperty("--preview",dragging.color+"88");
+   }
   }
  });
 }
@@ -94,14 +108,30 @@ function makeDragGhost(piece){
  dragGhost.appendChild(sh);document.body.appendChild(dragGhost);
 }
 function moveGhost(x,y){
- if(!dragGhost)return;
- const p=dragPoint(x,y);
- const w=dragGhost.offsetWidth||90,h=dragGhost.offsetHeight||90;
- const rect=$("board").getBoundingClientRect();
- let left=p.x-w/2, top=p.y-h/2;
- left=Math.max(rect.left+4,Math.min(left,rect.right-w-4));
- top=Math.max(rect.top+4,Math.min(top,rect.bottom-h-4));
- dragGhost.style.left=left+"px";dragGhost.style.top=top+"px";
+ if(!dragGhost||!dragging)return;
+ const point=dragPoint(x,y);
+ const cell=cellFromPoint(point.x,point.y);
+ const board=$("board").getBoundingClientRect();
+ const pad=9,gap=2;
+ const inner=board.width-pad*2-gap*(N-1);
+ const cellSize=inner/N;
+ // The ghost's 5x5 logical grid uses exactly the board cell geometry,
+ // so its visible blocks and the board preview occupy the same cells.
+ const gridW=cellSize*5+gap*4;
+ const gridH=gridW;
+ let left,top;
+ if(cell){
+   left=board.left+pad+cell.c*(cellSize+gap);
+   top=board.top+pad+cell.r*(cellSize+gap);
+ }else{
+   left=point.x-gridW/2; top=point.y-gridH/2;
+ }
+ dragGhost.style.width=gridW+"px";
+ dragGhost.style.height=gridH+"px";
+ dragGhost.style.left=left+"px";
+ dragGhost.style.top=top+"px";
+ dragGhost.style.transform="translate(0,0)";
+ dragGhost.style.setProperty("--drag-cell",cellSize+"px");
 }
 function moveDrag(x,y){
  const p=dragPoint(x,y);

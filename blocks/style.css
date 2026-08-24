@@ -272,3 +272,39 @@ button{border:0;border-radius:11px;padding:12px 16px;font-weight:1000;cursor:poi
 .dragGhost .shape{background:transparent!important;border:0!important;box-shadow:none!important}
 .dragGhost .mini{border:0!important;outline:0!important}
 .cell.preview{border:0!important;box-shadow:inset 0 0 0 1px #ffffff40,0 0 8px #ffffff18!important}
+
+/* v14 geometry: floating piece and board preview share the exact same cell grid */
+.dragGhost{
+  position:fixed!important;
+  z-index:10000!important;
+  pointer-events:none!important;
+  background:transparent!important;
+  border:0!important;
+  padding:0!important;
+  margin:0!important;
+  box-shadow:none!important;
+  filter:drop-shadow(0 10px 12px #0009)!important;
+  transform:none!important;
+  overflow:visible!important;
+}
+.dragGhost .shape{
+  position:absolute!important;
+  left:0!important;
+  top:0!important;
+  display:grid!important;
+  grid-template-columns:repeat(5,var(--drag-cell))!important;
+  grid-template-rows:repeat(5,var(--drag-cell))!important;
+  gap:2px!important;
+  transform:none!important;
+}
+.dragGhost .mini{
+  width:var(--drag-cell)!important;
+  height:var(--drag-cell)!important;
+  border-radius:6px!important;
+  box-sizing:border-box!important;
+}
+.dragGhost .mini[data-empty="1"]{
+  visibility:hidden!important;
+  background:transparent!important;
+  box-shadow:none!important;
+}
