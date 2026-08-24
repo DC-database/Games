@@ -4,9 +4,41 @@ const $=id=>document.getElementById(id);
 const safe=s=>String(s??"").replace(/[<>&"]/g,"");
 let player=localStorage.getItem("irwflixPlayer")||localStorage.getItem("memoryPlayer")||"Player";
 if(!player||player==="Player"){player=prompt("Enter your player name","Player")||"Player";localStorage.setItem("irwflixPlayer",player)}
-const icons=["apple","rocket","crown","car","cat","dog","sun","moon","gem","robot","ball","star"];
+const levelSets=[
+  // Level 1 — Farm Friends
+  ["dog","cat","rabbit","chicken"],
+  // Level 2 — Jungle Crew
+  ["lion","tiger","monkey","elephant","giraffe","zebra"],
+  // Level 3 — Ocean Life
+  ["dolphin","whale","octopus","shark","turtle","crab","fish","seahorse"],
+  // Level 4 — Forest Friends
+  ["fox","bear","wolf","deer","owl","frog","hedgehog","squirrel","panda","koala"],
+  // Level 5 — Safari
+  ["lion","elephant","giraffe","zebra","rhino","hippo","cheetah","crocodile","monkey","parrot","flamingo","snake"],
+  // Level 6 — Pets & Farm
+  ["dog","cat","rabbit","chicken","horse","pig","sheep","goat","duck","cow","hamster","mouse"],
+  // Level 7 — Ocean Deep
+  ["dolphin","whale","octopus","shark","turtle","crab","fish","squid","jellyfish","shrimp","seal","penguin"],
+  // Level 8 — Wild Animals
+  ["tiger","wolf","bear","fox","deer","panda","koala","kangaroo","gorilla","leopard","sloth","otter"],
+  // Level 9 — Birds & Reptiles
+  ["owl","eagle","parrot","flamingo","penguin","peacock","snake","crocodile","lizard","turtle","frog","snail"],
+  // Level 10 — Animal Kingdom Mix
+  ["lion","tiger","elephant","giraffe","zebra","panda","koala","dolphin","whale","eagle","fox","dog"]
+];
+function levelIcons(){return levelSets[Math.min(level-1,levelSets.length-1)];}
+
 let level=1,moves=0,score=0,seconds=0,first=null,second=null,lock=false,matched=0,timer=null,boostTimer=null,boostLeft=0,boostUsed=false,runStarted=false,submitted=false;
 
+const emojiSVG={
+  dog:"🐶",cat:"🐱",rabbit:"🐰",chicken:"🐔",lion:"🦁",tiger:"🐯",monkey:"🐵",elephant:"🐘",giraffe:"🦒",zebra:"🦓",
+  dolphin:"🐬",whale:"🐋",octopus:"🐙",shark:"🦈",turtle:"🐢",crab:"🦀",fish:"🐠",squid:"🦑",shrimp:"🦐",fox:"🦊",bear:"🐻",
+  wolf:"🐺",deer:"🦌",owl:"🦉",frog:"🐸",hedgehog:"🦔",squirrel:"🐿️",panda:"🐼",koala:"🐨",rhino:"🦏",hippo:"🦛",
+  cheetah:"🐆",crocodile:"🐊",parrot:"🦜",flamingo:"🦩",snake:"🐍",horse:"🐴",pig:"🐷",sheep:"🐑",goat:"🐐",duck:"🦆",
+  cow:"🐮",hamster:"🐹",mouse:"🐭",jellyfish:"🪼",seal:"🦭",penguin:"🐧",kangaroo:"🦘",gorilla:"🦍",
+  leopard:"🐆",sloth:"🦥",otter:"🦦",eagle:"🦅",peacock:"🦚",lizard:"🦎",snail:"🐌"
+};
+function animalSvg(name){return `<svg viewBox="0 0 100 100" role="img" aria-label="${name}"><text x="50" y="74" text-anchor="middle" font-size="68" font-family="Apple Color Emoji, Segoe UI Emoji, Noto Color Emoji, sans-serif">${emojiSVG[name]||"❓"}</text></svg>`}
 const SVG={
 apple:`<svg viewBox="0 0 100 100"><path d="M54 28c7-12 17-14 26-13-2 11-8 17-18 18" fill="#55a35b"/><path d="M49 35C31 20 10 39 18 61c7 20 17 26 32 28 16 2 34-10 37-30 3-20-16-34-38-24z" fill="#ef4f63"/><path d="M49 35c-3-8-2-14 3-20" stroke="#51402f" stroke-width="6" fill="none"/></svg>`,
 rocket:`<svg viewBox="0 0 100 100"><path d="M54 12C76 20 84 38 76 58L57 78 35 58c-7-19 1-36 19-46z" fill="#6ea8ff"/><circle cx="58" cy="39" r="8" fill="#fff"/><path d="M36 57 18 68l8 12 21-11M58 76l-2 18 14-5 4-20" fill="#ffbd5c"/><path d="M35 59 22 82" stroke="#ff6e6e" stroke-width="8"/></svg>`,
@@ -21,6 +53,7 @@ robot:`<svg viewBox="0 0 100 100"><rect x="22" y="28" width="56" height="48" rx=
 ball:`<svg viewBox="0 0 100 100"><circle cx="50" cy="50" r="34" fill="#ff6e73"/><path d="M50 16q0 20 18 34M50 84q0-20-18-34M20 36q18 4 30-20M80 64q-18-4-30 20" stroke="#fff" stroke-width="5" fill="none"/></svg>`,
 star:`<svg viewBox="0 0 100 100"><path d="m50 12 10 26 28 2-21 18 7 28-24-15-24 15 7-28-21-18 28-2z" fill="#ffd45c" stroke="#e4a83c" stroke-width="5"/></svg>`
 };
+Object.keys(emojiSVG).forEach(name=>{SVG[name]=animalSvg(name)});
 
 function shuffled(a){return [...a].sort(()=>Math.random()-.5)}
 function levelPairs(){return Math.min(12,4+Math.floor((level-1)*2))}
@@ -34,18 +67,19 @@ function startBoost(){
   $("message").textContent="⚡ SPEED BONUS! 2× score for 60 seconds!";
   boostTimer=setInterval(()=>{boostLeft--; $("boostTime").textContent=boostLeft;if(boostLeft<=0){clearInterval(boostTimer);$("boost").classList.add("hidden");$("message").textContent="Bonus expired — normal scoring continues."}},1000);
 }
+function levelTheme(){return ["Farm Friends","Jungle Crew","Ocean Life","Forest Friends","Safari","Pets & Farm","Ocean Deep","Wild Animals","Birds & Reptiles","Animal Kingdom Mix"][Math.min(level-1,9)]}
 function setup(){
   clearInterval(timer);clearInterval(boostTimer);timer=null;boostTimer=null;
   moves=score=seconds=matched=0;first=second=null;lock=false;submitted=false;runStarted=false;boostUsed=false;boostLeft=0;
   $("moves").textContent=0;$("score").textContent=0;$("time").textContent="0:00";$("level").textContent=level;$("levelFill").style.width=`${Math.min(100,level*10)}%`;$("boost").classList.add("hidden");
-  const count=levelPairs(), vals=shuffled(icons.slice(0,count).flatMap(x=>[x,x]));
+  const count=levelPairs(), pool=levelIcons(), vals=shuffled(pool.slice(0,count).flatMap(x=>[x,x]));
   $("board").innerHTML="";
   vals.forEach((icon,i)=>{
     const b=document.createElement("button");b.className="card";b.dataset.icon=icon;b.setAttribute("aria-label","Memory card");
     b.innerHTML=`<span class="card-inner"><span class="face back"></span><span class="face front">${SVG[icon]}</span></span>`;
     b.addEventListener("click",()=>flip(b));$("board").appendChild(b);
   });
-  $("message").textContent=`Level ${level}: find ${count} pairs.`;
+  $("message").textContent=`Level ${level}: ${levelTheme()} — find ${count} pairs.`;
 }
 function flip(card){
   if(lock||card.classList.contains("flipped")||card.classList.contains("matched"))return;
