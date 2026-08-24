@@ -1,3 +1,7 @@
-# IRWFLIX Blocks v21
+# IRWFLIX Blocks v23
 
-Mobile drag update: the floating block is now held about 140px above the fingertip, creating a deliberate invisible-force / magnetic separation so the player can see the board clearly. The board preview remains aligned to the lifted block and the finger may stay outside the board while moving it.
+- Adds reliable no-available-moves Game Over detection.
+- Game Over locks the run and shows final score.
+- Existing mobile drag/finger-gap behavior is preserved.
+- Firebase score submission remains available from the Game Over panel.
+- Version shown as v23.

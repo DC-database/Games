@@ -29,7 +29,7 @@ const SHAPES=[
 
 let board=[],pieces=[],score=0,best=Number(localStorage.blocksBest||0);
 let player=(localStorage.blocksPlayer||"").trim();
-let dragging=null,dragGhost=null,activePointerId=null,touchDragIndex=null,touchActive=false,clearAnimating=false;
+let dragging=null,dragGhost=null,activePointerId=null,touchDragIndex=null,touchActive=false,clearAnimating=false,gameEnded=false;
 
 const $=id=>document.getElementById(id);
 function ensurePlayer(){
@@ -63,7 +63,7 @@ function cellFromPoint(x,y){
  const c=Math.floor((x-rect.left-pad)/(cell+gap)),r=Math.floor((y-rect.top-pad)/(cell+gap));
  return r>=0&&r<N&&c>=0&&c<N?{r,c}:null;
 }
-const TOUCH_LIFT_PX=220; // invisible magnetic repulsion: keeps the lifted block well above the fingertip
+const TOUCH_LIFT_PX=140; // invisible magnetic repulsion: keeps the lifted block well above the fingertip
 function dragPoint(x,y){
  // Project the finger onto the board. The finger may stay completely
  // outside the board; the logical piece position is clamped to the board.
@@ -200,16 +200,14 @@ function endDrag(e){
      $("message").textContent=`🎉 ${lines.count} line${lines.count>1?"s":""} cleared!`;
      if(pieces.every(x=>x.used))pieces=[makePiece(),makePiece(),makePiece()];
      render();
-     const possible=pieces.some(p=>!p.used&&board.some((row,r)=>row.some((_,c)=>fit(p.shape,r,c))));
-     if(!possible)gameOver();
+     if(!hasAnyMove())gameOver();
    });
  }else{
    if(pieces.every(x=>x.used))pieces=[makePiece(),makePiece(),makePiece()];
    animateScoreValue(score-gained,score,220);
    $("message").textContent="Good move. Keep building.";
    render();
-   const possible=pieces.some(p=>!p.used&&board.some((row,r)=>row.some((_,c)=>fit(p.shape,r,c))));
-   if(!possible)gameOver();
+   if(!hasAnyMove())gameOver();
  }
 }
 
@@ -316,7 +314,21 @@ function render(){
  });
 }
 
-function gameOver(){$("final").textContent=score.toLocaleString();$("over").classList.add("show");$("submitStatus").textContent=""}
+function hasAnyMove(){
+ return pieces.some(p=>!p.used&&board.some((row,r)=>row.some((_,c)=>fit(p.shape,r,c))));
+}
+function gameOver(){
+ if(gameEnded)return;
+ gameEnded=true;
+ if(dragGhost)dragGhost.remove();
+ dragGhost=null;dragging=null;activePointerId=null;clearPreview();
+ document.querySelectorAll(".piece.selected").forEach(e=>e.classList.remove("selected"));
+ $("final").textContent=score.toLocaleString();
+ $("message").textContent="No more moves. Game over.";
+ $("over").classList.add("show");
+ $("submitStatus").textContent="";
+ render();
+}
 async function submitScore(){
  const btn=$("submit");btn.disabled=true;$("submitStatus").textContent="Submitting…";
  try{
@@ -339,7 +351,7 @@ async function loadLeaderboard(){
  }catch(err){console.error(err);status.textContent="Leaderboard not connected yet."}
 }
 function escapeHtml(s){return s.replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[m]))}
-function newGame(){if(dragGhost)dragGhost.remove();dragGhost=null;board=Array.from({length:N},()=>Array(N).fill(null));pieces=[makePiece(),makePiece(),makePiece()];score=0;dragging=null;$("over").classList.remove("show");$("message").textContent="Press and hold a piece, then drag it onto the board.";render()}
+function newGame(){if(dragGhost)dragGhost.remove();gameEnded=false;dragGhost=null;board=Array.from({length:N},()=>Array(N).fill(null));pieces=[makePiece(),makePiece(),makePiece()];score=0;dragging=null;$("over").classList.remove("show");$("message").textContent="Press and hold a piece, then drag it onto the board.";render()}
 
 window.addEventListener("pointermove",e=>{
  if(!dragging || e.pointerId!==activePointerId)return;
@@ -359,7 +371,7 @@ window.addEventListener("pointercancel",e=>{
 window.addEventListener("contextmenu",e=>{if(dragging)e.preventDefault()});
 
 $("new").onclick=newGame;$("again").onclick=newGame;$("submit").onclick=submitScore;$("refreshLB").onclick=loadLeaderboard;
-ensurePlayer();newGame();loadLeaderboard();
+ensurePlayer();newGame();if(!hasAnyMove())gameOver();loadLeaderboard();
 
 
 /* v8: keep Android touch drag under game control */
