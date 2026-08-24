@@ -29,7 +29,7 @@ const SHAPES=[
 
 let board=[],pieces=[],score=0,best=Number(localStorage.blocksBest||0);
 let player=(localStorage.blocksPlayer||"").trim();
-let dragging=null,dragGhost=null,activePointerId=null,touchDragIndex=null,touchActive=false,clearAnimating=false,gameEnded=false;
+let dragging=null,dragGhost=null,activePointerId=null,touchDragIndex=null,touchActive=false,clearAnimating=false,gameEnded=false,runSaved=false;
 
 const $=id=>document.getElementById(id);
 function ensurePlayer(){
@@ -317,9 +317,23 @@ function render(){
 function hasAnyMove(){
  return pieces.some(p=>!p.used&&board.some((row,r)=>row.some((_,c)=>fit(p.shape,r,c))));
 }
+async function autoSaveRun(reason="game-over") {
+ if(runSaved) return;
+ runSaved=true;
+ try {
+  await Promise.race([
+   addDoc(collection(db,"leaderboard"),{game:"blocks",name:player,score:Number(score),reason,createdAt:serverTimestamp()}),
+   new Promise((_,reject)=>setTimeout(()=>reject(new Error("Save timed out")),7000))
+  ]);
+  $("submitStatus").textContent="Score saved ✓";
+  loadLeaderboard();
+ } catch(err) { console.error(err); $("submitStatus").textContent="Score could not be saved — check Firebase rules."; }
+}
+
 function gameOver(){
  if(gameEnded)return;
  gameEnded=true;
+ autoSaveRun("game-over");
  if(dragGhost)dragGhost.remove();
  dragGhost=null;dragging=null;activePointerId=null;clearPreview();
  document.querySelectorAll(".piece.selected").forEach(e=>e.classList.remove("selected"));
@@ -341,7 +355,7 @@ async function submitScore(){
 async function loadLeaderboard(){
  const status=$("lbStatus"),list=$("lbList");
  try{
-  const q=query(collection(db,"leaderboard"),limit(200)),snap=await getDocs(q);
+  const q=query(collection(db,"leaderboard"),limit(200)),snap=await Promise.race([getDocs(q),new Promise((_,reject)=>setTimeout(()=>reject(new Error("Leaderboard request timed out")),7000))]);
   const rows=[];
   snap.forEach(d=>{const x=d.data();if(x.game==="blocks")rows.push(x)});
   rows.sort((a,b)=>Number(b.score||0)-Number(a.score||0));
@@ -351,7 +365,7 @@ async function loadLeaderboard(){
  }catch(err){console.error(err);status.textContent="Leaderboard not connected yet."}
 }
 function escapeHtml(s){return s.replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[m]))}
-function newGame(){if(dragGhost)dragGhost.remove();gameEnded=false;dragGhost=null;board=Array.from({length:N},()=>Array(N).fill(null));pieces=[makePiece(),makePiece(),makePiece()];score=0;dragging=null;$("over").classList.remove("show");$("message").textContent="Press and hold a piece, then drag it onto the board.";render()}
+function newGame(){runSaved=false;if(dragGhost)dragGhost.remove();gameEnded=false;dragGhost=null;board=Array.from({length:N},()=>Array(N).fill(null));pieces=[makePiece(),makePiece(),makePiece()];score=0;dragging=null;$("over").classList.remove("show");$("message").textContent="Press and hold a piece, then drag it onto the board.";render()}
 
 window.addEventListener("pointermove",e=>{
  if(!dragging || e.pointerId!==activePointerId)return;
