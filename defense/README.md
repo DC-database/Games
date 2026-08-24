@@ -1,4 +1,4 @@
-# Realm Defense — Tower Defense — Tiny Swords Visual Upgrade
+# Realm Defense — Tower Defense Prototype
 
 A browser-based tower defense game designed for Cloudflare Pages and ready for Firebase integration.
 
@@ -44,7 +44,3 @@ For a production global leaderboard:
 - Player accounts
 - Global Firebase leaderboard
 - Mobile touch controls
-
-
-## Tiny Swords assets
-Selected Tiny Swords Update 010 assets are bundled only for use inside this game. Do not redistribute the raw asset files separately. Credit: Pixel Frog / Tiny Swords.
