@@ -1,44 +1,51 @@
 <!doctype html>
 <html lang="en">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>IRWFLIX Defense v2.0</title>
-<link rel="stylesheet" href="style.css">
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover" />
+<title>IRWFLIX Defense 3D</title>
+<link rel="stylesheet" href="style.css" />
 </head>
 <body>
-<div class="app">
-<header class="topbar">
-  <div><div class="eyebrow">IRWFLIX PLAY • DEFENSE v2.0</div><h1>Forest Outpost</h1></div>
+<div id="game"></div>
+<div id="hud">
+  <div class="brand">IRWFLIX <span>DEFENSE 3D</span><small>v3.0</small></div>
   <div class="stats">
-    <div class="stat"><span>❤️</span><b id="lives">20</b></div>
-    <div class="stat"><span>💰</span><b id="gold">350</b></div>
-    <div class="stat"><span>🌊</span><b id="wave">0/20</b></div>
-    <div class="stat"><span>🏆</span><b id="score">0</b></div>
+    <div><label>WAVE</label><b id="wave">1</b></div>
+    <div><label>HP</label><b id="hp">20</b></div>
+    <div><label>GOLD</label><b id="gold">600</b></div>
+    <div><label>SCORE</label><b id="score">0</b></div>
   </div>
-</header>
-<main class="layout">
-<section class="board-card">
-  <div class="canvas-wrap"><canvas id="game" width="1100" height="650"></canvas><div id="bossBanner" class="boss-banner"></div><div id="toast" class="toast"></div></div>
-</section>
-<aside class="panel">
-  <div class="panel-head"><div><div class="eyebrow">COMMAND</div><h2>Build Towers</h2></div><button id="startBtn" class="primary">START WAVE</button></div>
-  <div class="tower-grid">
-    <button class="tower-card" data-type="archer"><img src="assets/towers/set_2_archer_level_1.png"><span><b>Archer</b><small>Fast • $75</small></span></button>
-    <button class="tower-card" data-type="cannon"><img src="assets/towers/set_2_cannon_level_1.png"><span><b>Cannon</b><small>Area • $125</small></span></button>
-    <button class="tower-card" data-type="mage"><img src="assets/towers/set_2_mage_level_1.png"><span><b>Mage</b><small>Magic • $175</small></span></button>
-    <button class="tower-card" data-type="barracks"><img src="assets/towers/set_2_barracks_level_1.png"><span><b>Barracks</b><small>Guard • $150</small></span></button>
-  </div>
-  <div class="selected-card" id="selectedCard"><div class="selected-title"><div><b id="selName">No tower selected</b><small id="selDesc">Drag a tower onto a glowing build pad.</small></div></div><div class="upgrade-row"><button id="upgradeBtn">UPGRADE</button><button id="sellBtn" class="danger">SELL</button></div><div id="towerStats" class="tower-stats"></div></div>
-  <div class="hero-card"><div><div class="eyebrow">HERO</div><b id="heroName">IRWFLIX Hero</b><small id="heroLevel">Level 1 / 10</small></div><button id="heroDrag" class="hero-drag">DRAG HERO</button></div>
-  <div class="rush"><div><b>⚡ BATTLE RUSH</b><span id="rushText">Ready when a wave begins</span></div><strong id="rushTimer">—</strong></div>
-  <button id="submitBtn" class="submit">SUBMIT SCORE</button>
-  <div class="leaderboard"><div class="lb-head"><b>GLOBAL LEADERBOARD</b><span>Firebase</span></div><div id="scores">Loading…</div></div>
-  <div class="help"><b>How to play</b><p>Drag a tower card onto a glowing pad. Tap a placed tower to upgrade or sell it. Drag the hero around the battlefield.</p><p>Every wave has a boss. Survive, build combos, and use the 60-second Battle Rush for high scores.</p></div>
-</aside>
-</main>
-<footer>IRWFLIX Defense v2.0 • 20 waves • boss every wave • hero Lv1–10 • tower Lv1–5</footer>
+  <div class="rush" id="rush" hidden><b>⚡ BATTLE RUSH <span id="rushMult">×2</span></b><span id="rushTime">60</span>s</div>
 </div>
-<div id="gameOver" class="modal hidden"><div class="modal-card"><div class="eyebrow">RUN COMPLETE</div><h2 id="endTitle">Game Over</h2><div class="final-score" id="finalScore">0</div><p id="finalMeta"></p><div class="modal-actions"><button id="submitEnd" class="primary">SUBMIT SCORE</button><button id="restart" class="secondary">PLAY AGAIN</button></div></div></div>
+<div id="bossbar" hidden><div><b id="bossName">BOSS</b><span id="bossHpText"></span></div><div class="bar"><i id="bossHp"></i></div></div>
+<div id="message" class="message"></div>
+<div id="towerPanel" class="panel hidden">
+  <div class="panelTitle"><b id="towerTitle">Tower</b><button id="closeTower">×</button></div>
+  <div class="towerStats" id="towerStats"></div>
+  <button id="upgradeBtn" class="primary">UPGRADE</button>
+  <button id="sellBtn" class="secondary">SELL</button>
+</div>
+<div id="heroPanel" class="panel hidden">
+  <div class="panelTitle"><b>HERO</b><button id="closeHero">×</button></div>
+  <div id="heroStats"></div>
+  <button id="heroUpgradeBtn" class="primary">UPGRADE HERO</button>
+</div>
+<div id="palette">
+  <div class="paletteTitle">BUILD TOWERS</div>
+  <div class="towerCard" data-type="turret"><b>Turret</b><span>💰 120</span></div>
+  <div class="towerCard" data-type="cannon"><b>Cannon</b><span>💰 180</span></div>
+  <div class="towerCard" data-type="ballista"><b>Ballista</b><span>💰 220</span></div>
+  <div class="towerCard" data-type="catapult"><b>Catapult</b><span>💰 260</span></div>
+  <div class="hint">Press & hold a tower, then drag it onto a glowing build pad.</div>
+</div>
+<div id="bottomBar">
+  <button id="heroBtn">🦸 HERO</button>
+  <button id="pauseBtn">Ⅱ PAUSE</button>
+  <button id="endBtn">END RUN</button>
+</div>
+<div id="modal" class="modal hidden"><div class="modalBox"><h2 id="modalTitle">GAME OVER</h2><div id="modalBody"></div><div class="modalActions"><button id="submitBtn" class="primary">SUBMIT SCORE</button><button id="restartBtn" class="secondary">NEW RUN</button></div></div></div>
+<script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.180.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.180.0/examples/jsm/"}}</script>
 <script type="module" src="game.js"></script>
-</body></html>
+</body>
+</html>
