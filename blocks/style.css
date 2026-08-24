@@ -409,3 +409,17 @@ button{border:0;border-radius:11px;padding:12px 16px;font-weight:1000;cursor:poi
   opacity:.8;
 }
 @media(max-width:800px){.build-version{font-size:8px}}
+
+/* v25: mobile-visible game-over and score submission */
+.game-over-modal{display:none;position:relative;margin-top:12px;border-radius:18px;padding:3px;background:linear-gradient(135deg,#7f4bd6,#263e61,#2e8a6a);z-index:50}
+.game-over-modal.show{display:block;animation:overIn .28s ease-out both}
+.game-over-card{background:linear-gradient(145deg,#111a28,#080d15);border-radius:15px;padding:18px;text-align:center;box-shadow:0 18px 45px #0009}
+.game-over-card small{display:block;color:#b98cff;font-weight:1000;letter-spacing:2px}
+.game-over-card strong{display:block;color:#ff8090;font-size:22px;letter-spacing:2px;margin-top:4px}
+.game-over-card em{display:block;font-style:normal;font-size:46px;font-weight:1000;line-height:1.05;margin:6px 0}
+#runSummary{color:#aebbd0;font-weight:800;font-size:13px;margin:5px 0 12px}
+.game-over-card button{width:100%;min-height:48px;border:0;border-radius:13px;margin-top:7px;font-weight:1000;font-size:15px}
+#submit{background:#73e6a2;color:#07120c}
+#again{background:#2a405a;color:#fff}
+#submitStatus{min-height:20px;color:#9fb0c5;font-size:12px;font-weight:800;margin-top:8px}
+@keyframes overIn{from{opacity:0;transform:translateY(10px) scale(.98)}to{opacity:1;transform:none}}

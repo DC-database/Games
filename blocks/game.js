@@ -1,8 +1,5 @@
-import { initializeApp } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-app.js";
-import { getFirestore, collection, addDoc, query, orderBy, limit, getDocs, serverTimestamp } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js";
-
 const firebaseConfig={
- apiKey:"AIzaSyC2jNNzAk5ghmVE6KLOeGPtd3CCTzpw3qo",
+ apiKey:"AIzaSyC2jNNzAkghm5VE6KLOeGPtd3CCTzpw3qo",
  authDomain:"leaderboard-90b9b.firebaseapp.com",
  projectId:"leaderboard-90b9b",
  storageBucket:"leaderboard-90b9b.firebasestorage.app",
@@ -10,8 +7,7 @@ const firebaseConfig={
  appId:"1:891059392275:web:757305992c2d83d39214e6",
  measurementId:"G-RXNVYRFXC5"
 };
-const firebaseApp=initializeApp(firebaseConfig);
-const db=getFirestore(firebaseApp);
+const FIRESTORE_URL="https://firestore.googleapis.com/v1/projects/leaderboard-90b9b/databases/(default)/documents/leaderboard";
 
 const N=10;
 const COLORS=["#ff4f9a","#8d62ff","#ff5b54","#39b8ff","#41d68a","#ffd34f","#27d5c7","#ff9d38"];
@@ -29,7 +25,8 @@ const SHAPES=[
 
 let board=[],pieces=[],score=0,best=Number(localStorage.blocksBest||0);
 let player=(localStorage.blocksPlayer||"").trim();
-let dragging=null,dragGhost=null,activePointerId=null,touchDragIndex=null,touchActive=false,clearAnimating=false,gameEnded=false,runSaved=false;
+let dragging=null,dragGhost=null,activePointerId=null,touchDragIndex=null,touchActive=false,clearAnimating=false,gameEnded=false;
+let runStartedAt=0, runSeconds=0, rushActive=false, rushUntil=0, rushTimer=null, comboCount=0, lastClearAt=0, submitted=false;
 
 const $=id=>document.getElementById(id);
 function ensurePlayer(){
@@ -40,6 +37,39 @@ function ensurePlayer(){
  }
  $("player").textContent=player;
 }
+function startRun(){
+ if(runStartedAt||gameEnded)return;
+ runStartedAt=Date.now();
+ updateRunClock();
+}
+function updateRunClock(){
+ if(!runStartedAt)return;
+ runSeconds=Math.floor((Date.now()-runStartedAt)/1000);
+ const rush=runSeconds<60;
+ if(rush!==rushActive){rushActive=rush; updateRushUI();}
+ if(rush){
+   if(!rushTimer)rushTimer=setInterval(()=>{
+     if(!runStartedAt||gameEnded){clearInterval(rushTimer);rushTimer=null;return;}
+     runSeconds=Math.floor((Date.now()-runStartedAt)/1000);
+     updateRushUI();
+   },250);
+ }
+}
+function updateRushUI(){
+ const el=$("message");
+ if(!runStartedAt||gameEnded)return;
+ if(runSeconds<60){
+   const left=60-runSeconds;
+   el.textContent=`⚡ SPEED RUSH ×2 — ${left}s remaining`;
+ }
+}
+function scoreMultiplier(){return runStartedAt && ((Date.now()-runStartedAt)<60000)?2:1;}
+function runBucket(){
+ if(runSeconds<120)return "under_2_minutes";
+ if(runSeconds<300)return "under_5_minutes";
+ return "5_plus_minutes";
+}
+function stopRunClock(){if(rushTimer){clearInterval(rushTimer);rushTimer=null;}}
 function rotate(shape){
  let a=shape.map(([x,y])=>[y,-x]);
  let minX=Math.min(...a.map(p=>p[0])),minY=Math.min(...a.map(p=>p[1]));
@@ -144,6 +174,7 @@ function beginDrag(index,e){
  const p=pieces[index];
  if(!p||p.used)return;
  e.preventDefault();
+ startRun();
  dragging=p;
  activePointerId=e.pointerId;
  makeDragGhost(p);
@@ -181,11 +212,21 @@ function endDrag(e){
  p.used=true;
 
  const lines=findCompletedLines();
+ const now=Date.now();
+ if(lines.count){
+   comboCount=(now-lastClearAt<5000)?comboCount+1:1;
+   lastClearAt=now;
+ }else{
+   comboCount=0;
+ }
  let gained=p.shape.length*10;
  if(lines.count)gained+=lines.count===1?100:lines.count===2?250:500+lines.count*100;
-
+ if(comboCount>1)gained+=Math.min(1000,(comboCount-1)*150);
+ const mult=scoreMultiplier();
+ gained*=mult;
  score+=gained;
  best=Math.max(best,score);localStorage.blocksBest=best;
+ $('combo').textContent=`COMBO ×${Math.max(1,comboCount||1)}${mult>1?'  ⚡×2':''}`;
 
  if(dragGhost)dragGhost.remove();
  dragGhost=null;clearPreview();dragging=null;activePointerId=null;
@@ -317,55 +358,82 @@ function render(){
 function hasAnyMove(){
  return pieces.some(p=>!p.used&&board.some((row,r)=>row.some((_,c)=>fit(p.shape,r,c))));
 }
-async function autoSaveRun(reason="game-over") {
- if(runSaved) return;
- runSaved=true;
- try {
-  await Promise.race([
-   addDoc(collection(db,"leaderboard"),{game:"blocks",name:player,score:Number(score),reason,createdAt:serverTimestamp()}),
-   new Promise((_,reject)=>setTimeout(()=>reject(new Error("Save timed out")),7000))
-  ]);
-  $("submitStatus").textContent="Score saved ✓";
-  loadLeaderboard();
- } catch(err) { console.error(err); $("submitStatus").textContent="Score could not be saved — check Firebase rules."; }
-}
-
 function gameOver(){
  if(gameEnded)return;
  gameEnded=true;
- autoSaveRun("game-over");
+ stopRunClock();
+ runSeconds=runStartedAt?Math.floor((Date.now()-runStartedAt)/1000):0;
  if(dragGhost)dragGhost.remove();
  dragGhost=null;dragging=null;activePointerId=null;clearPreview();
  document.querySelectorAll(".piece.selected").forEach(e=>e.classList.remove("selected"));
  $("final").textContent=score.toLocaleString();
- $("message").textContent="No more moves. Game over.";
+ $("overTitle").textContent="GAME OVER";
+ $("runSummary").textContent=`${runSeconds<120?"⚡ Under 2 minutes":"⏱️ "+(runSeconds<300?"Under 5 minutes":"5+ minutes")} · ${runSeconds}s · ${comboCount?`Best combo ×${comboCount}`:"No combo"}`;
+ $("submitStatus").textContent="Your score is ready to register.";
  $("over").classList.add("show");
- $("submitStatus").textContent="";
+ $("message").textContent="No more valid moves.";
  render();
 }
+function finishActiveRun(){
+ if(gameEnded)return;
+ runSeconds=runStartedAt?Math.floor((Date.now()-runStartedAt)/1000):0;
+ gameEnded=true;stopRunClock();
+ $("final").textContent=score.toLocaleString();
+ $("overTitle").textContent="RUN ENDED";
+ $("runSummary").textContent=`${runSeconds<120?"⚡ Under 2 minutes":"⏱️ "+(runSeconds<300?"Under 5 minutes":"5+ minutes")} · ${runSeconds}s · You can submit this score.`;
+ $("submitStatus").textContent="Score has not been registered yet.";
+ $("over").classList.add("show");
+}
+
 async function submitScore(){
- const btn=$("submit");btn.disabled=true;$("submitStatus").textContent="Submitting…";
+ const btn=$("submit");
+ if(submitted){$("submitStatus").textContent="Score already registered ✓";return;}
+ btn.disabled=true;$("submitStatus").textContent="Submitting score…";
  try{
-  await addDoc(collection(db,"leaderboard"),{game:"blocks",name:player,score:Number(score),createdAt:serverTimestamp()});
-  $("submitStatus").textContent="Score submitted ✓";loadLeaderboard();
+  const payload={fields:{
+   game:{stringValue:"blocks"},
+   name:{stringValue:String(player)},
+   score:{integerValue:String(Number(score)||0)},
+   timeSeconds:{integerValue:String(Number(runSeconds)||0)},
+   timeBucket:{stringValue:runBucket()},
+   combo:{integerValue:String(Number(comboCount)||1)},
+   createdAt:{integerValue:String(Date.now())}
+  }};
+  const res=await fetch(FIRESTORE_URL,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(payload)});
+  if(!res.ok)throw new Error("Firestore upload failed: "+res.status);
+  submitted=true;
+  $("submitStatus").textContent="Score submitted ✓";
+  loadLeaderboard();
  }catch(err){
-  console.error(err);$("submitStatus").textContent="Leaderboard unavailable. Check Firebase rules.";
- }finally{btn.disabled=false}
+  console.error(err);
+  $("submitStatus").textContent="Score could not be registered. Check Firestore rules/connection.";
+ }finally{btn.disabled=false;}
 }
 async function loadLeaderboard(){
  const status=$("lbStatus"),list=$("lbList");
+ status.textContent="Loading scores…";
  try{
-  const q=query(collection(db,"leaderboard"),limit(200)),snap=await Promise.race([getDocs(q),new Promise((_,reject)=>setTimeout(()=>reject(new Error("Leaderboard request timed out")),7000))]);
-  const rows=[];
-  snap.forEach(d=>{const x=d.data();if(x.game==="blocks")rows.push(x)});
+  const controller=new AbortController();const timeout=setTimeout(()=>controller.abort(),8000);
+  const res=await fetch(FIRESTORE_URL+"?pageSize=1000",{signal:controller.signal});
+  clearTimeout(timeout);
+  if(!res.ok)throw new Error("Firestore read failed: "+res.status);
+  const data=await res.json();
+  const rows=(data.documents||[]).map(d=>{const f=d.fields||{};return {game:f.game?.stringValue||"",name:f.name?.stringValue||"Player",score:Number(f.score?.integerValue||f.score?.doubleValue||0),timeSeconds:Number(f.timeSeconds?.integerValue||0),timeBucket:f.timeBucket?.stringValue||""}}).filter(x=>x.game==="blocks");
   rows.sort((a,b)=>Number(b.score||0)-Number(a.score||0));
-  list.innerHTML="";let i=1;
-  rows.slice(0,10).forEach(x=>{const li=document.createElement("li");li.innerHTML=`<span>${i++}</span><b>${escapeHtml(String(x.name||"Player"))}</b><span class="lb-score">${Number(x.score||0).toLocaleString()}</span>`;list.appendChild(li)});
+  list.innerHTML="";
+  rows.slice(0,10).forEach((x,i)=>{const li=document.createElement("li");li.innerHTML=`<span>${i+1}</span><b>${escapeHtml(String(x.name||"Player"))}</b><span class="lb-score">${Number(x.score||0).toLocaleString()}</span>`;list.appendChild(li)});
   status.textContent=list.children.length?"Top 10":"No scores yet.";
- }catch(err){console.error(err);status.textContent="Leaderboard not connected yet."}
+ }catch(err){console.error(err);status.textContent="Leaderboard unavailable — check Firebase rules.";}
 }
+
 function escapeHtml(s){return s.replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[m]))}
-function newGame(){runSaved=false;if(dragGhost)dragGhost.remove();gameEnded=false;dragGhost=null;board=Array.from({length:N},()=>Array(N).fill(null));pieces=[makePiece(),makePiece(),makePiece()];score=0;dragging=null;$("over").classList.remove("show");$("message").textContent="Press and hold a piece, then drag it onto the board.";render()}
+function newGame(force=false){
+ if(!force && runStartedAt && !gameEnded && score>0){finishActiveRun();return;}
+ stopRunClock();
+ if(dragGhost)dragGhost.remove();
+ gameEnded=false;submitted=false;dragGhost=null;board=Array.from({length:N},()=>Array(N).fill(null));pieces=[makePiece(),makePiece(),makePiece()];score=0;runStartedAt=0;runSeconds=0;rushActive=false;comboCount=0;lastClearAt=0;dragging=null;
+ $("over").classList.remove("show");$("submitStatus").textContent="";$("message").textContent="Press and hold a piece, then drag it onto the board.";$("combo").textContent="COMBO ×1";render();
+}
 
 window.addEventListener("pointermove",e=>{
  if(!dragging || e.pointerId!==activePointerId)return;
@@ -384,8 +452,8 @@ window.addEventListener("pointercancel",e=>{
 },{passive:false});
 window.addEventListener("contextmenu",e=>{if(dragging)e.preventDefault()});
 
-$("new").onclick=newGame;$("again").onclick=newGame;$("submit").onclick=submitScore;$("refreshLB").onclick=loadLeaderboard;
-ensurePlayer();newGame();if(!hasAnyMove())gameOver();loadLeaderboard();
+$("new").onclick=()=>newGame(false);$("again").onclick=()=>newGame(true);$("submit").onclick=submitScore;$("refreshLB").onclick=loadLeaderboard;
+ensurePlayer();newGame(true);while(!hasAnyMove()){pieces=[makePiece(),makePiece(),makePiece()]}render();loadLeaderboard();
 
 
 /* v8: keep Android touch drag under game control */
