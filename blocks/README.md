@@ -1,7 +1,2 @@
-# IRWFLIX Blocks v5
-- Fixed mobile tray: 3 pieces stay side-by-side.
-- Fixed empty/dark mini-cells so only the actual block shape is visible.
-- Improved touch drag with pointer capture and pointer ID tracking.
-- Added Firestore global leaderboard (no authentication).
-- Firebase project: leaderboard-90b9b.
-- Configure Firestore rules using firebase-firestore-rules.txt.
+# Blocks v7
+Mobile touch fix. Uses one unified Pointer Events drag system with pointer capture and a forced horizontal piece tray. Replace index.html, style.css, and game.js in Games/blocks on the main branch.

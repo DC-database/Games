@@ -94,36 +94,26 @@ function moveGhost(x,y){
  dragGhost.style.left=p.x+"px";dragGhost.style.top=p.y+"px";showPreview(p);
 }
 
-function startTouchDrag(index,touch){
+function beginDrag(index,e){
  const p=pieces[index];
  if(!p||p.used)return;
- touchActive=true;
- touchDragIndex=index;
+ e.preventDefault();
  dragging=p;
- makeGhost(p,touch.clientX,touch.clientY);
- moveGhost(touch.clientX,touch.clientY);
-}
-function findTouch(e){
- if(!e.touches||!e.touches.length)return null;
- return e.touches[0];
-}
-function finishTouchDrag(touch,cancel=false){
- if(!touchActive)return;
- if(cancel){
-   if(dragGhost)dragGhost.remove();
-   dragGhost=null;clearPreview();dragging=null;touchActive=false;touchDragIndex=null;
-   render();$("message").textContent="Piece returned.";
-   return;
- }
- endDrag({clientX:touch.clientX,clientY:touch.clientY});
- touchActive=false;touchDragIndex=null;
-}
-function startDrag(index,e){
- const p=pieces[index];if(!p||p.used)return;
- e.preventDefault();activePointerId=e.pointerId;
+ activePointerId=e.pointerId;
  try{e.currentTarget.setPointerCapture(e.pointerId)}catch(_){}
- dragging=p;e.currentTarget.classList.add("selected");
- makeGhost(p,e.clientX,e.clientY);moveGhost(e.clientX,e.clientY);
+ e.currentTarget.classList.add("selected");
+ makeGhost(p,e.clientX,e.clientY);
+ moveGhost(e.clientX,e.clientY);
+}
+function cancelDrag(){
+ if(dragGhost)dragGhost.remove();
+ dragGhost=null;
+ clearPreview();
+ dragging=null;
+ activePointerId=null;
+ document.querySelectorAll('.piece.selected').forEach(e=>e.classList.remove('selected'));
+ render();
+ $("message").textContent="Piece returned.";
 }
 function endDrag(e){
  if(!dragging)return;
@@ -136,7 +126,7 @@ function endDrag(e){
   $("message").textContent=lines?`✨ ${lines} line${lines>1?"s":""} cleared!`:"Good move. Keep building.";
   p.used=true;if(pieces.every(x=>x.used))pieces=[makePiece(),makePiece(),makePiece()];
  }else $("message").textContent="Not placed — move to a valid position and release.";
- if(dragGhost)dragGhost.remove();dragGhost=null;clearPreview();dragging=null;activePointerId=null;render();
+ if(dragGhost)dragGhost.remove();dragGhost=null;clearPreview();dragging=null;activePointerId=null;document.querySelectorAll(".piece.selected").forEach(e=>e.classList.remove("selected"));render();
  if(can){
   const possible=pieces.some(p=>!p.used&&board.some((row,r)=>row.some((_,c)=>fit(p.shape,r,c))));
   if(!possible)gameOver();
@@ -170,40 +160,12 @@ function render(){
   for(let y=0;y<5;y++)for(let x=0;x<5;x++)sh.appendChild(miniFor(p.shape,x,y,p.color));
   e.appendChild(sh);
   if(!p.used){
-   e.addEventListener("pointerdown",ev=>startDrag(i,ev),{passive:false});
-   e.addEventListener("touchstart",bindTouchToPiece,{passive:false});
+   e.addEventListener("pointerdown",ev=>beginDrag(i,ev),{passive:false});
   }
   q.appendChild(e);
  });
 }
 
-// Explicit touch fallback for Android/iOS browsers.
-// Pointer events remain enabled for desktop; touch events guarantee drag behavior on mobile.
-function bindTouchToPiece(e){
- const pieceEl=e.currentTarget;
- const index=[...$("pieces").children].indexOf(pieceEl);
- if(index<0||pieces[index].used)return;
- e.preventDefault();
- const t=findTouch(e);
- if(t)startTouchDrag(index,t);
-}
-function touchMoveHandler(e){
- if(!touchActive)return;
- e.preventDefault();
- const t=findTouch(e);
- if(t)moveGhost(t.clientX,t.clientY);
-}
-function touchEndHandler(e){
- if(!touchActive)return;
- e.preventDefault();
- const t=(e.changedTouches&&e.changedTouches[0])||{clientX:0,clientY:0};
- finishTouchDrag(t,false);
-}
-function touchCancelHandler(e){
- if(!touchActive)return;
- e.preventDefault();
- finishTouchDrag(null,true);
-}
 function gameOver(){$("final").textContent=score.toLocaleString();$("over").classList.add("show");$("submitStatus").textContent=""}
 async function submitScore(){
  const btn=$("submit");btn.disabled=true;$("submitStatus").textContent="Submitting…";
@@ -226,15 +188,34 @@ async function loadLeaderboard(){
 function escapeHtml(s){return s.replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[m]))}
 function newGame(){board=Array.from({length:N},()=>Array(N).fill(null));pieces=[makePiece(),makePiece(),makePiece()];score=0;dragging=null;$("over").classList.remove("show");$("message").textContent="Press and hold a piece, then drag it onto the board.";render()}
 
-document.addEventListener("touchmove",touchMoveHandler,{passive:false});
-document.addEventListener("touchend",touchEndHandler,{passive:false});
-document.addEventListener("touchcancel",touchCancelHandler,{passive:false});
-
-window.addEventListener("pointermove",e=>{if(!dragging)return;if(activePointerId!==null&&e.pointerId!==activePointerId)return;e.preventDefault();moveGhost(e.clientX,e.clientY)},{passive:false});
-window.addEventListener("pointerup",e=>{if(!dragging)return;if(activePointerId!==null&&e.pointerId!==activePointerId)return;e.preventDefault();endDrag(e)},{passive:false});
-window.addEventListener("pointercancel",e=>{if(!dragging)return;if(activePointerId!==null&&e.pointerId!==activePointerId)return;if(dragGhost)dragGhost.remove();dragGhost=null;clearPreview();dragging=null;activePointerId=null;render();$("message").textContent="Piece returned."},{passive:false});
+window.addEventListener("pointermove",e=>{
+ if(!dragging || e.pointerId!==activePointerId)return;
+ e.preventDefault();
+ moveGhost(e.clientX,e.clientY);
+},{passive:false});
+window.addEventListener("pointerup",e=>{
+ if(!dragging || e.pointerId!==activePointerId)return;
+ e.preventDefault();
+ endDrag(e);
+},{passive:false});
+window.addEventListener("pointercancel",e=>{
+ if(!dragging || e.pointerId!==activePointerId)return;
+ e.preventDefault();
+ cancelDrag();
+},{passive:false});
 window.addEventListener("contextmenu",e=>{if(dragging)e.preventDefault()});
+
 $("new").onclick=newGame;$("again").onclick=newGame;$("submit").onclick=submitScore;$("refreshLB").onclick=loadLeaderboard;
 ensurePlayer();newGame();loadLeaderboard();
 
-document.addEventListener("gesturestart",e=>{if(touchActive)e.preventDefault()},{passive:false});
+
+/* v8: keep Android touch drag under game control */
+window.addEventListener("touchstart", e => {
+  if (dragging) e.preventDefault();
+}, {passive:false});
+window.addEventListener("touchmove", e => {
+  if (dragging) e.preventDefault();
+}, {passive:false});
+window.addEventListener("touchend", e => {
+  if (dragging) e.preventDefault();
+}, {passive:false});
