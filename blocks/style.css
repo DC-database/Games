@@ -254,3 +254,15 @@ button{border:0;border-radius:11px;padding:12px 16px;font-weight:1000;cursor:poi
   .dragGhost .shape{grid-template-columns:repeat(5,18px)!important;grid-template-rows:repeat(5,18px)!important}
   .dragGhost .mini{width:18px!important;height:18px!important}
 }
+
+
+/* v11: original-style floating drag + locked board shadow */
+.dragGhost{display:block!important;position:fixed!important;z-index:100000!important;pointer-events:none!important;opacity:1!important;filter:drop-shadow(0 10px 12px #0009)!important;}
+.dragGhost .shape{transform:scale(1.42)!important;}
+.piece.selected{opacity:0!important;transform:none!important;box-shadow:none!important;border-color:transparent!important;}
+.piece.selected .shape{visibility:hidden!important;}
+.cell.preview{opacity:1!important;}
+
+/* v12: floating piece lives inside the board, above the finger */
+.dragGhost{overflow:visible!important;}
+.dragGhost .shape{transform:scale(1.42)!important;}

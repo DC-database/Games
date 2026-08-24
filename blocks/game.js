@@ -63,7 +63,15 @@ function cellFromPoint(x,y){
  const c=Math.floor((x-rect.left-pad)/(cell+gap)),r=Math.floor((y-rect.top-pad)/(cell+gap));
  return r>=0&&r<N&&c>=0&&c<N?{r,c}:null;
 }
-function dragPoint(x,y){return {x,y:y-76}}
+function dragPoint(x,y){
+  // The finger stays below the piece. The piece itself is projected into
+  // the board area so it never covers the finger or flies outside the board.
+  const rect=$("board").getBoundingClientRect();
+  const lift=82;
+  const targetX=Math.max(rect.left+8,Math.min(x,rect.right-8));
+  const targetY=Math.max(rect.top+12,Math.min(y-lift,rect.bottom-12));
+  return {x:targetX,y:targetY};
+}
 function clearPreview(){document.querySelectorAll(".cell.preview,.cell.invalid").forEach(e=>e.classList.remove("preview","invalid"))}
 function showPreview(point){
  clearPreview();if(!dragging)return;
@@ -92,11 +100,12 @@ function makeDragGhost(piece){
 }
 function moveGhost(x,y){
  if(!dragGhost)return;
+ const p=dragPoint(x,y);
  const w=dragGhost.offsetWidth||90,h=dragGhost.offsetHeight||90;
- // Keep the piece above the finger so the finger never hides the target.
- let left=x-w/2, top=y-h-28;
- left=Math.max(6,Math.min(left,window.innerWidth-w-6));
- top=Math.max(8,top);
+ const rect=$("board").getBoundingClientRect();
+ let left=p.x-w/2, top=p.y-h/2;
+ left=Math.max(rect.left+4,Math.min(left,rect.right-w-4));
+ top=Math.max(rect.top+4,Math.min(top,rect.bottom-h-4));
  dragGhost.style.left=left+"px";dragGhost.style.top=top+"px";
 }
 function moveDrag(x,y){
