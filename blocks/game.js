@@ -184,6 +184,7 @@ function endDrag(e){
  if(lines.count)gained+=lines.count===1?100:lines.count===2?250:500+lines.count*100;
 
  score+=gained;
+ checkLevelUp();
  best=Math.max(best,score);localStorage.blocksBest=best;
 
  if(dragGhost)dragGhost.remove();
@@ -315,15 +316,53 @@ function render(){
  });
 }
 
-function gameOver(){$("final").textContent=score.toLocaleString();$("over").classList.add("show");$("submitStatus").textContent=""}
-async function submitScore(){
- const btn=$("submit");btn.disabled=true;$("submitStatus").textContent="Submitting…";
- try{
-  await addDoc(collection(db,"leaderboard"),{game:"blocks",name:player,score:Number(score),createdAt:serverTimestamp()});
-  $("submitStatus").textContent="Score submitted ✓";loadLeaderboard();
- }catch(err){
-  console.error(err);$("submitStatus").textContent="Leaderboard unavailable. Check Firebase rules.";
- }finally{btn.disabled=false}
+
+let level=1;
+const levelTargets=[0,1000,2500,5000,8500,13000,19000,27000,38000,52000,70000];
+function targetForLevel(l){
+  if(l<levelTargets.length)return levelTargets[l];
+  return Math.round(levelTargets[levelTargets.length-1]*Math.pow(1.32,l-levelTargets.length+1));
+}
+function updateLevelUI(){
+ const target=targetForLevel(level);
+ const prev=targetForLevel(Math.max(1,level-1));
+ const pct=Math.max(0,Math.min(100,((score-prev)/(target-prev))*100));
+ const el=$("level"),fill=$("levelFill");
+ if(el)el.textContent=`LEVEL ${level}`;
+ if(fill)fill.style.width=pct+"%";
+}
+function checkLevelUp(){
+ let changed=false;
+ while(score>=targetForLevel(level)){level++;changed=true}
+ if(changed){
+   const msg=document.createElement("div");
+   msg.className="level-up-pop";
+   msg.innerHTML=`<b>LEVEL ${level}</b><span>TARGET ${targetForLevel(level).toLocaleString()}</span>`;
+   document.body.appendChild(msg);
+   setTimeout(()=>msg.remove(),1100);
+ }
+ updateLevelUI();
+}
+function hasAnyMove(){
+ return pieces.some(p=>!p.used && board.some((row,r)=>row.some((_,c)=>fit(p.shape,r,c))));
+}
+function showFinalGameOver(){
+ const panel=document.createElement("div");
+ panel.className="game-over-panel";
+ panel.innerHTML=`<div class="game-over-card">
+   <h2>GAME OVER</h2>
+   <div class="final-score">${score.toLocaleString()}</div>
+   <div class="final-level">LEVEL ${level} · BEST ${best.toLocaleString()}</div>
+   <button class="submit" id="goSubmit">SUBMIT SCORE</button>
+   <button class="again" id="goAgain">PLAY AGAIN</button>
+ </div>`;
+ document.body.appendChild(panel);
+ panel.querySelector("#goAgain").onclick=()=>location.reload();
+ panel.querySelector("#goSubmit").onclick=()=>document.querySelector("#submit")?.click();
+}
+function gameOver(){
+ updateLevelUI();
+ showFinalGameOver();
 }
 async function loadLeaderboard(){
  const status=$("lbStatus"),list=$("lbList");
