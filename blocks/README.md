@@ -1,27 +1,16 @@
-# IRWFLIX PLAY — Blocks v25
+# IRWFLIX PLAY — Blocks v30
 
-This is the mobile/game-system update for Blocks.
+## Score save fix
+- Firestore REST requests now include the Firebase Web API key for correct Firebase project routing.
+- POST score creation returns the actual Firestore error details to the browser console if it fails.
+- Leaderboard reads use the same Firebase API key.
+- No Firebase Authentication is added; access continues to be controlled by Firestore Security Rules.
+- Game Over still auto-submits the score.
 
-## Fixes
-- Game Over overlay is now inside the main game card, so it is visible on mobile.
-- No-move detection checks every unused piece against every board position.
-- If the final remaining piece cannot be placed, the run immediately ends.
-- New Game no longer silently destroys an active score; it first offers the run-finalization screen.
-- Game Over / Run End screen asks for **SUBMIT SCORE** or **NEW GAME**.
-- Score is explicitly registered only when **SUBMIT SCORE** is pressed.
-- Top 10 is calculated from all submitted runs; the same player may appear multiple times.
-- 60-second 2× Speed Rush: score earned during the first 60 seconds is doubled. The run continues normally after the rush expires.
-- Combo bonus for consecutive line clears within 5 seconds.
-- Run time is recorded and categorized as under 2 minutes, under 5 minutes, or 5+ minutes.
-- Firebase uses the Firestore REST endpoint, avoiding browser ES-module `file://` CORS errors during local testing.
-- Version shown in the header: **v25**.
+## Important Firebase Console check
+The API key used by the game must allow the Cloud Firestore API (`firestore.googleapis.com`). Firebase documents that direct REST access may require the Firebase API key to have the relevant Firebase/Google API enabled/restricted correctly.
 
-## GitHub structure
-```text
-blocks/
-├── index.html
-├── style.css
-├── game.js
-├── firebase-firestore-rules.txt
-└── README.md
-```
+The expected Firestore collection is:
+`leaderboard`
+
+The game sends: `game`, `name`, `score`, `timeSeconds`, `stage`, `stageName`, `createdAt`.

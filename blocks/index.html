@@ -6,7 +6,7 @@
 <meta name="theme-color" content="#080b12">
 <title>Blocks — IRWFLIX PLAY</title>
 <link rel="stylesheet" href="style.css">
-<meta name="blocks-version" content="v25-scoring-game-over"></head>
+<meta name="blocks-version" content="v29-local-safe-stage-time-attack"></head>
 <body>
 <div class="wrap">
 <header>
@@ -14,13 +14,14 @@
   <div id="player" class="player"></div>
   <div class="stat">SCORE <b id="score">0</b></div>
   <div class="stat">BEST <b id="best">0</b></div>
-<span class="build-version">v25</span></header>
+  <button id="sound" class="icon-btn" aria-label="Toggle sound">🔊</button>
+<span class="build-version">v29</span></header>
 
 <main>
 <section class="game-card">
   <div class="topline">
-    <div><small>BLOCKS</small><h1>Clear the lines.</h1></div>
-    <b id="combo">COMBO ×1</b>
+    <div><small>BLOCKS</small><h1>Clear the lines.</h1><div id="stage" class="stage-label">STAGE 1 · CITY</div></div>
+    <div class="top-stats"><b id="timer">02:00</b><b id="combo">COMBO ×1</b></div>
   </div>
 
   <div id="board" class="board" aria-label="10 by 10 game board"></div>
@@ -40,11 +41,13 @@
     <div class="game-over-card">
       <small>RUN FINISHED</small>
       <strong id="overTitle">GAME OVER</strong>
+      <div class="over-score-label">FINAL SCORE</div>
       <em id="final">0</em>
+      <div class="over-best"><span>BEST SCORE</span><b id="overBest">0</b></div>
       <div id="runSummary"></div>
-      <button id="submit">SUBMIT SCORE</button>
-      <button id="again">NEW GAME</button>
-      <div id="submitStatus"></div>
+      <div id="submitStatus">Saving your score…</div>
+      <button id="again">PLAY AGAIN</button>
+      <button id="menu" class="secondary">BACK TO MENU</button>
     </div>
   </div>
 </section>
@@ -62,6 +65,6 @@
 </main>
 </div>
 
-<script type="module" src="game.js"></script>
+<script defer src="game.js"></script>
 </body>
 </html>
