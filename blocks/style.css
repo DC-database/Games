@@ -51,3 +51,27 @@ button{border:0;border-radius:11px;padding:12px 16px;font-weight:1000;cursor:poi
  .leaderboard{margin-top:14px}
 }
 @media(max-width:340px){.piece{min-height:84px}.shape{grid-template-columns:repeat(5,10px);grid-template-rows:repeat(5,10px);gap:2px}.mini{width:10px;height:10px}}
+
+/* v6 mobile tray: always three columns, never vertical */
+.pieces{
+  display:flex !important;
+  flex-direction:row !important;
+  flex-wrap:nowrap !important;
+  align-items:stretch;
+  justify-content:space-between;
+  width:100%;
+  gap:8px;
+  overflow:visible;
+}
+.piece{
+  flex:1 1 0 !important;
+  width:0 !important;
+  min-width:0 !important;
+  max-width:none !important;
+  touch-action:none !important;
+  -webkit-touch-callout:none !important;
+}
+@media(max-width:800px){
+  .pieces{display:flex !important;flex-direction:row !important;flex-wrap:nowrap !important;gap:6px !important}
+  .piece{flex:1 1 0 !important;width:0 !important;min-width:0 !important}
+}

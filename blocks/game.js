@@ -29,7 +29,7 @@ const SHAPES=[
 
 let board=[],pieces=[],score=0,best=Number(localStorage.blocksBest||0);
 let player=(localStorage.blocksPlayer||"").trim();
-let dragging=null,dragGhost=null,activePointerId=null;
+let dragging=null,dragGhost=null,activePointerId=null,touchDragIndex=null,touchActive=false;
 
 const $=id=>document.getElementById(id);
 function ensurePlayer(){
@@ -93,6 +93,31 @@ function moveGhost(x,y){
  if(!dragGhost)return;const p=dragPoint(x,y);
  dragGhost.style.left=p.x+"px";dragGhost.style.top=p.y+"px";showPreview(p);
 }
+
+function startTouchDrag(index,touch){
+ const p=pieces[index];
+ if(!p||p.used)return;
+ touchActive=true;
+ touchDragIndex=index;
+ dragging=p;
+ makeGhost(p,touch.clientX,touch.clientY);
+ moveGhost(touch.clientX,touch.clientY);
+}
+function findTouch(e){
+ if(!e.touches||!e.touches.length)return null;
+ return e.touches[0];
+}
+function finishTouchDrag(touch,cancel=false){
+ if(!touchActive)return;
+ if(cancel){
+   if(dragGhost)dragGhost.remove();
+   dragGhost=null;clearPreview();dragging=null;touchActive=false;touchDragIndex=null;
+   render();$("message").textContent="Piece returned.";
+   return;
+ }
+ endDrag({clientX:touch.clientX,clientY:touch.clientY});
+ touchActive=false;touchDragIndex=null;
+}
 function startDrag(index,e){
  const p=pieces[index];if(!p||p.used)return;
  e.preventDefault();activePointerId=e.pointerId;
@@ -144,9 +169,40 @@ function render(){
   const sh=document.createElement("div");sh.className="shape";
   for(let y=0;y<5;y++)for(let x=0;x<5;x++)sh.appendChild(miniFor(p.shape,x,y,p.color));
   e.appendChild(sh);
-  if(!p.used)e.addEventListener("pointerdown",ev=>startDrag(i,ev),{passive:false});
+  if(!p.used){
+   e.addEventListener("pointerdown",ev=>startDrag(i,ev),{passive:false});
+   e.addEventListener("touchstart",bindTouchToPiece,{passive:false});
+  }
   q.appendChild(e);
  });
+}
+
+// Explicit touch fallback for Android/iOS browsers.
+// Pointer events remain enabled for desktop; touch events guarantee drag behavior on mobile.
+function bindTouchToPiece(e){
+ const pieceEl=e.currentTarget;
+ const index=[...$("pieces").children].indexOf(pieceEl);
+ if(index<0||pieces[index].used)return;
+ e.preventDefault();
+ const t=findTouch(e);
+ if(t)startTouchDrag(index,t);
+}
+function touchMoveHandler(e){
+ if(!touchActive)return;
+ e.preventDefault();
+ const t=findTouch(e);
+ if(t)moveGhost(t.clientX,t.clientY);
+}
+function touchEndHandler(e){
+ if(!touchActive)return;
+ e.preventDefault();
+ const t=(e.changedTouches&&e.changedTouches[0])||{clientX:0,clientY:0};
+ finishTouchDrag(t,false);
+}
+function touchCancelHandler(e){
+ if(!touchActive)return;
+ e.preventDefault();
+ finishTouchDrag(null,true);
 }
 function gameOver(){$("final").textContent=score.toLocaleString();$("over").classList.add("show");$("submitStatus").textContent=""}
 async function submitScore(){
@@ -169,9 +225,16 @@ async function loadLeaderboard(){
 }
 function escapeHtml(s){return s.replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[m]))}
 function newGame(){board=Array.from({length:N},()=>Array(N).fill(null));pieces=[makePiece(),makePiece(),makePiece()];score=0;dragging=null;$("over").classList.remove("show");$("message").textContent="Press and hold a piece, then drag it onto the board.";render()}
+
+document.addEventListener("touchmove",touchMoveHandler,{passive:false});
+document.addEventListener("touchend",touchEndHandler,{passive:false});
+document.addEventListener("touchcancel",touchCancelHandler,{passive:false});
+
 window.addEventListener("pointermove",e=>{if(!dragging)return;if(activePointerId!==null&&e.pointerId!==activePointerId)return;e.preventDefault();moveGhost(e.clientX,e.clientY)},{passive:false});
 window.addEventListener("pointerup",e=>{if(!dragging)return;if(activePointerId!==null&&e.pointerId!==activePointerId)return;e.preventDefault();endDrag(e)},{passive:false});
 window.addEventListener("pointercancel",e=>{if(!dragging)return;if(activePointerId!==null&&e.pointerId!==activePointerId)return;if(dragGhost)dragGhost.remove();dragGhost=null;clearPreview();dragging=null;activePointerId=null;render();$("message").textContent="Piece returned."},{passive:false});
 window.addEventListener("contextmenu",e=>{if(dragging)e.preventDefault()});
 $("new").onclick=newGame;$("again").onclick=newGame;$("submit").onclick=submitScore;$("refreshLB").onclick=loadLeaderboard;
 ensurePlayer();newGame();loadLeaderboard();
+
+document.addEventListener("gesturestart",e=>{if(touchActive)e.preventDefault()},{passive:false});
