@@ -1,5 +1,5 @@
 *{box-sizing:border-box}
-html,body{margin:0;min-height:100%;touch-action:none;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+html,body{margin:0;min-height:100%;touch-action:none}
 body{background:radial-gradient(circle at 50% -10%,#202d42 0,#0a0e14 48%,#05070b 100%);color:#f4f6fb;font:14px system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;padding:14px}
 .wrap{max-width:1050px;margin:auto}
 header{display:flex;align-items:center;gap:12px;margin-bottom:16px}
@@ -14,7 +14,7 @@ main{display:grid;grid-template-columns:minmax(0,700px) 280px;gap:16px}
 .topline small,.info>b,.tray-label{color:#b98cff;font-weight:1000;letter-spacing:2px}
 .topline h1{margin:4px 0 13px;font-size:28px;letter-spacing:-.5px}
 #combo{background:#211637;color:#d9c2ff;border:1px solid #6844a0;border-radius:10px;padding:8px 10px;font-size:11px}
-.board{touch-action:none;overscroll-behavior:none;
+.board{
  width:min(620px,100%);margin:auto;aspect-ratio:1;
  display:grid;grid-template-columns:repeat(10,1fr);
  gap:2px;padding:9px;border-radius:18px;
@@ -28,7 +28,7 @@ main{display:grid;grid-template-columns:minmax(0,700px) 280px;gap:16px}
 #message{text-align:center;color:#8f9caf;min-height:40px;padding:12px 6px;font-size:12px}
 .tray-label{font-size:9px;color:#78869a;margin-bottom:7px}
 .pieces{display:grid;grid-template-columns:repeat(3,1fr);gap:9px}
-.piece{min-height:102px;touch-action:none;overscroll-behavior:none;background:#0b1119;border:1px solid #2b394b;border-radius:14px;display:grid;place-items:center;user-select:none;-webkit-user-select:none;touch-action:none;cursor:grab}
+.piece{min-height:102px;background:#0b1119;border:1px solid #2b394b;border-radius:14px;display:grid;place-items:center;user-select:none;-webkit-user-select:none;touch-action:none;cursor:grab}
 .piece:active{cursor:grabbing}
 .piece.used{opacity:.18}
 .piece.selected{border-color:#b98cff;box-shadow:0 0 0 2px #b98cff30}
@@ -49,9 +49,15 @@ button{border:0;border-radius:11px;padding:12px 16px;font-weight:1000;cursor:poi
 @media(max-width:800px){
  body{padding:7px}.wrap{max-width:620px}.info{display:none}
  .game-card{padding:11px;border-radius:17px}.topline h1{font-size:22px}
- .board{touch-action:none;overscroll-behavior:none;gap:1px;padding:7px;border-radius:15px}.cell{border-radius:5px}
+ .board{gap:1px;padding:7px;border-radius:15px}.cell{border-radius:5px}
  .pieces{gap:7px}.piece{min-height:82px}
  .shape{grid-template-columns:repeat(5,13px);grid-template-rows:repeat(5,13px);gap:2px}
  .mini{width:13px;height:13px}.dragGhost .shape{transform:scale(1.55)}
  header{flex-wrap:wrap}
 }
+.piece .mini{opacity:1!important;visibility:visible}
+.piece .mini[data-empty="1"]{visibility:hidden}
+.piece{position:relative;overflow:visible}
+.piece:not(.used){opacity:1}
+@media(max-width:800px){.pieces{min-height:82px}.piece{background:#0e1621;border-color:#34445a}}
+.player{margin-left:auto;color:#aab5c4;font-weight:900;font-size:11px;max-width:110px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.player:before{content:"PLAYER ";color:#657286;font-size:8px;letter-spacing:1px}@media(max-width:800px){.player{order:3;width:100%;margin-left:0}}

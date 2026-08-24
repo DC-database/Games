@@ -14,7 +14,7 @@ const SHAPES=[
 ];
 
 let board=[], pieces=[], score=0;
-let best=Number(localStorage.blocksBest||0);
+let best=Number(localStorage.blocksBest||0);\nlet player=localStorage.blocksPlayer||"Player";
 let dragging=null, dragGhost=null;
 
 const $=id=>document.getElementById(id);
@@ -96,9 +96,6 @@ function startDrag(index,e){
  const p=pieces[index];
  if(p.used)return;
  e.preventDefault();
- if(e.pointerType==="touch" && e.currentTarget.setPointerCapture){
-   try{e.currentTarget.setPointerCapture(e.pointerId)}catch(_){}
- }
  dragging=p;
  e.currentTarget.classList.add("selected");
  makeGhost(p,e.clientX,e.clientY);
@@ -162,7 +159,7 @@ function render(){
    for(let y=0;y<5;y++)for(let x=0;x<5;x++){
      const m=document.createElement("i");m.className="mini";
      const on=p.shape.some(([sx,sy])=>sx===x&&sy===y);
-     if(on)m.style.background=p.color;else m.style.visibility="hidden";
+     if(on){m.style.background=p.color;m.style.visibility="visible";m.dataset.empty="0"}else{m.style.background="transparent";m.style.visibility="hidden";m.dataset.empty="1"}
      sh.appendChild(m);
    }
    e.appendChild(sh);
@@ -203,4 +200,8 @@ document.addEventListener("pointercancel",e=>{
 $("new").onclick=newGame;
 $("again").onclick=newGame;
 newGame();
-document.addEventListener("contextmenu",e=>{if(dragging)e.preventDefault()});
+if(!localStorage.blocksPlayer){
+ const entered=prompt("Enter your player name:", "Player");
+ player=(entered||"Player").trim().slice(0,18)||"Player";
+ localStorage.blocksPlayer=player;
+}
