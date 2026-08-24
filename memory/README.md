@@ -1,20 +1,18 @@
-IRWFLIX MEMORY v19 — LEADERBOARD FIX
+IRWFLIX MEMORY v20
 
-This version keeps the requested no-authentication design.
+This is the corrected integrated deployment package.
 
-Important leaderboard fix:
-- Firestore REST requests now include the Firebase Web API key from the existing firebaseConfig.
+Fixes from the previous deployment:
+- Uses memory-v20.js, not the old memory-v16.js.
+- Includes the complete assets/cards/front folder and assets/cards/back folder.
+- Includes all external sound WAV files.
+- Animal artwork is transparent artwork only; the game supplies the card shell.
 - No Firebase Authentication is used.
-- Firestore Security Rules remain the authority for read/write permission.
-- The score write and leaderboard read use the same project/database and API key.
+- Firestore requests use the existing Firebase Web API key and the leaderboard project.
+- Timer: 60 seconds; correct pair +3 seconds; wrong pair -1 second.
+- Score remains separate from time.
+- Game Over automatically submits the run.
 
-Why:
-The previous direct REST calls omitted the Web API key. Adding the key is required for the browser REST request path used here and removes that configuration-related 403 cause.
+IMPORTANT: Upload the ENTIRE contents of this ZIP to the memory/ folder, including the assets folder. Do not upload only index.html or only the JS file.
 
-If the deployed rules are:
-match /leaderboard/{document} {
-  allow read, write: if true;
-}
-then the game should be able to read and create leaderboard documents without user authentication.
-
-No changes were made to the timer, +3s/-1s time logic, score, sounds, or clean card assets.
+After deployment, confirm the browser displays MEMORY v20. If it still says MEMORY v16, the old deployment/cache is still being served.
