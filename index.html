@@ -1,15 +1,59 @@
 <!doctype html>
-<html lang="en"><head>
-<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>IRWFLIX PLAY — Games</title>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>IRWFLIX PLAY</title>
 <style>
-*{box-sizing:border-box}body{margin:0;background:radial-gradient(circle at 20% 0%,#242044,transparent 32%),radial-gradient(circle at 85% 15%,#123b3c,transparent 28%),linear-gradient(145deg,#07090e,#0b1018 55%,#06080c);color:#f5f7fb;font-family:system-ui,sans-serif}.wrap{max-width:1180px;margin:auto;padding:28px 22px 50px}a{color:inherit;text-decoration:none}nav{display:flex;justify-content:space-between;align-items:center}.logo{font-size:22px;font-weight:1000}.logo span,.eyebrow{color:#b98cff}.badge{font-size:10px;font-weight:900;letter-spacing:1.5px;color:#8996aa;border:1px solid #293445;background:#0b1119;padding:9px 12px;border-radius:999px}.hero{padding:82px 0 48px;max-width:780px}.eyebrow{font-size:11px;font-weight:1000;letter-spacing:3px}h1{font-size:clamp(44px,7vw,78px);line-height:.94;letter-spacing:-4px;margin:12px 0 20px}.hero p{color:#9ca8b8;font-size:16px;line-height:1.7;max-width:650px}.games{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px}.game{min-height:350px;overflow:hidden;border:1px solid #2a3546;border-radius:26px;background:#0b1018;box-shadow:0 30px 80px #0009;transition:.2s}.game:hover{transform:translateY(-4px);border-color:#59677d}.art{height:190px;position:relative;overflow:hidden}.defense .art{background:linear-gradient(160deg,#173b2a,#0a1d15)}.blocks .art{background:linear-gradient(160deg,#20233d,#101525)}.emoji{position:absolute;font-size:72px;filter:drop-shadow(0 15px 15px #0008)}.defense .emoji{left:65px;top:52px}.blocks .emoji{right:65px;top:52px}.body{padding:22px 23px}.type{font-size:9px;color:#7f8da0;font-weight:1000;letter-spacing:2px}h2{margin:6px 0;font-size:26px}.body p{color:#8996a8;line-height:1.5;font-size:12px;min-height:38px}.play{display:inline-block;margin-top:8px;background:#b98cff;color:#100a18;padding:11px 16px;border-radius:11px;font-weight:1000;font-size:11px}.blocks .play{background:#55c7ff}footer{margin-top:42px;padding-top:20px;border-top:1px solid #1e2734;color:#596678;font-size:10px;display:flex;justify-content:space-between}@media(max-width:700px){.games{grid-template-columns:1fr}h1{letter-spacing:-2px}.hero{padding:55px 0 32px}}
-</style></head>
-<body><div class="wrap">
-<nav><a class="logo" href="./">IRWFLIX <span>PLAY</span></a><div class="badge">GAME ARCADE</div></nav>
-<section class="hero"><div class="eyebrow">IRWFLIX PLAY</div><h1>Pick a game.<br>Start playing.</h1><p>A growing collection of browser games built for quick sessions, high scores and endless challenges.</p></section>
-<section class="games">
-<a class="game defense" href="./defense/"><div class="art"><div class="emoji">🏰</div></div><div class="body"><div class="type">STRATEGY • TOWER DEFENSE</div><h2>Realm Defense</h2><p>Build towers, stop the waves and protect the crystal.</p><span class="play">PLAY NOW →</span></div></a>
-<a class="game blocks" href="./blocks/"><div class="art"><div class="emoji">🧩</div></div><div class="body"><div class="type">PUZZLE • CASUAL</div><h2>Blocks</h2><p>Place Tetris-style shapes, clear rows and columns, and chase your best score.</p><span class="play">PLAY NOW →</span></div></a>
-</section><footer><span>IRWFLIX PLAY</span><span>More games coming soon</span></footer>
-</div></body></html>
+:root{--bg:#070d16;--panel:#101a28;--line:#24344a;--text:#f6f8fb;--muted:#91a0b5;--gold:#ffd86b;--green:#72e6a0}
+*{box-sizing:border-box}body{margin:0;background:radial-gradient(circle at 50% -10%,#213b58,#070d16 48%);color:var(--text);font-family:system-ui,-apple-system,Segoe UI,sans-serif;padding:18px}
+.app{width:min(1120px,100%);margin:auto}header{display:flex;align-items:center;gap:12px;margin-bottom:18px}.logo{font-size:27px;font-weight:1000}.version{margin-left:auto;color:#66768c;font-size:9px;font-weight:900;letter-spacing:1px}
+.hero{background:linear-gradient(145deg,#15263b,#0d1725);border:1px solid var(--line);border-radius:24px;padding:24px;box-shadow:0 22px 70px #0008;margin-bottom:14px}.hero h1{margin:0;font-size:30px}.hero p{color:var(--muted);margin:7px 0 0}.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}.card{background:rgba(16,26,40,.9);border:1px solid var(--line);border-radius:18px;padding:18px;box-shadow:0 12px 35px #0004}.gamecard{min-height:150px}.gamehead{display:flex;justify-content:space-between;align-items:center}.gameicon{font-size:28px}.gamecard h2{margin:4px 0;font-size:20px}.score{font-size:34px;font-weight:1000;margin-top:16px}.label{color:var(--muted);font-size:10px;font-weight:900;letter-spacing:1px}.rank{color:var(--gold);font-size:12px;font-weight:900;margin-top:4px}.play{display:block;text-align:center;text-decoration:none;background:var(--green);color:#06120b;font-weight:1000;border-radius:11px;padding:11px;margin-top:14px}.overall{margin-top:14px}.overall .big{font-size:38px;font-weight:1000}.leader{margin-top:14px}.leader h2{margin:0 0 12px}.rows{display:grid;gap:5px}.row{display:grid;grid-template-columns:38px 1fr repeat(3,90px);gap:8px;align-items:center;padding:10px 8px;border-bottom:1px solid #1d2b3d;color:#d6deea}.row.head{color:var(--muted);font-size:9px;font-weight:900;letter-spacing:1px}.right{text-align:right}.status{color:var(--muted);font-size:12px}@media(max-width:760px){body{padding:9px}.grid{grid-template-columns:1fr}.row{grid-template-columns:30px 1fr 70px}.row .hide-mobile{display:none}.hero{padding:18px}}
+</style>
+</head>
+<body>
+<div class="app">
+<header><div class="logo">IRWFLIX PLAY</div><div class="version">DASHBOARD v1</div></header>
+<section class="hero">
+<h1 id="welcome">Welcome to IRWFLIX PLAY</h1>
+<p>Your best scores across every game.</p>
+<div class="overall"><span class="label">YOUR TOTAL BEST SCORE</span><div class="big" id="total">—</div></div>
+</section>
+<section class="grid">
+<article class="card gamecard"><div class="gamehead"><div class="gameicon">🏰</div><span class="label">DEFENSE</span></div><h2>IRWFLIX Defense</h2><div class="score" id="defScore">—</div><div class="label">TOP SCORE</div><div class="rank" id="defRank"></div><a class="play" href="/Games/defense/">PLAY</a></article>
+<article class="card gamecard"><div class="gamehead"><div class="gameicon">🧩</div><span class="label">BLOCKS</span></div><h2>Blocks</h2><div class="score" id="blocksScore">—</div><div class="label">TOP SCORE</div><div class="rank" id="blocksRank"></div><a class="play" href="/Games/blocks/">PLAY</a></article>
+<article class="card gamecard"><div class="gamehead"><div class="gameicon">🧠</div><span class="label">MEMORY</span></div><h2>Memory Match</h2><div class="score" id="memoryScore">—</div><div class="label">TOP SCORE</div><div class="rank" id="memoryRank"></div><a class="play" href="/Games/memory/">PLAY</a></article>
+</section>
+<section class="card leader">
+<h2>🏆 Global Scores</h2>
+<div class="status" id="status">Loading leaderboard…</div>
+<div class="rows" id="rows"></div>
+</section>
+</div>
+<script type="module">
+import{initializeApp}from"https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
+import{getFirestore,collection,getDocs,query,limit}from"https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
+const firebaseConfig={apiKey:"AIzaSyC2jNNzAk5ghmVE6KLOeGPtd3CCTzpw3qo",authDomain:"leaderboard-90b9b.firebaseapp.com",projectId:"leaderboard-90b9b",storageBucket:"leaderboard-90b9b.firebasestorage.app",messagingSenderId:"891059392275",appId:"1:891059392275:web:757305992c2d83d39214e6",measurementId:"G-RXNVYRFXC5"};
+const db=getFirestore(initializeApp(firebaseConfig));const esc=s=>String(s??"").replace(/[<>&"]/g,"");
+const names=[localStorage.memoryPlayer,localStorage.blocksPlayer,localStorage.defensePlayer].filter(Boolean);
+if(names[0])document.querySelector("#welcome").textContent="Welcome back, "+names[0]+" 👋";
+const gameNames={defense:"Defense",blocks:"Blocks",memory:"Memory"};
+async function load(){try{
+ const snap=await getDocs(query(collection(db,"leaderboard"),limit(500)));const by={defense:[],blocks:[],memory:[]};
+ snap.forEach(d=>{const x=d.data();if(by[x.game])by[x.game].push(x)});
+ let total=0;
+ for(const g of Object.keys(by)){
+   by[g].sort((a,b)=>Number(b.score||0)-Number(a.score||0));const top=by[g][0];const score=Number(top?.score||0);total+=score;
+   document.querySelector("#"+g+"Score").textContent=score?score.toLocaleString():"—";
+   document.querySelector("#"+g+"Rank").textContent=top?`#1 ${esc(top.name||"Player")}`:"No scores yet";
+ }
+ document.querySelector("#total").textContent=total.toLocaleString();
+ const players={};for(const g of Object.keys(by)){by[g].forEach(x=>{const n=String(x.name||"Player");players[n]??={defense:0,blocks:0,memory:0};players[n][g]=Math.max(players[n][g],Number(x.score||0))})}
+ const ranked=Object.entries(players).map(([name,s])=>({name,...s,total:s.defense+s.blocks+s.memory})).sort((a,b)=>b.total-a.total).slice(0,10);
+ const rows=document.querySelector("#rows");rows.innerHTML='<div class="row head"><span>#</span><span>PLAYER</span><span class="right">DEFENSE</span><span class="right">BLOCKS</span><span class="right">MEMORY</span></div>';
+ ranked.forEach((p,i)=>rows.insertAdjacentHTML("beforeend",`<div class="row"><span>${i+1}</span><b>${esc(p.name)}</b><span class="right hide-mobile">${p.defense.toLocaleString()}</span><span class="right hide-mobile">${p.blocks.toLocaleString()}</span><span class="right hide-mobile">${p.memory.toLocaleString()}</span></div>`));
+ document.querySelector("#status").textContent=ranked.length?"Best score per player, across games":"No scores yet — play a game and submit your score.";
+}catch(e){document.querySelector("#status").textContent="Leaderboard unavailable. Check Firestore rules/deployment.";console.error(e)}}
+load();
+</script>
+</body></html>
