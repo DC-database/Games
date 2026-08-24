@@ -1,12 +1,7 @@
-# IRWFLIX Memory Match v3
+# IRWFLIX Memory v4
 
-- Fixed mobile card rendering from v2.
-- Player name is stored in Firestore `players` as well as localStorage.
-- The same name can be recovered on another browser by entering the same name.
-- A run is automatically saved when NEW GAME is pressed after play.
-- A completed final run is automatically saved.
-- Levels 1-6 work, including final completion.
-- Firebase leaderboard uses the shared `leaderboard` collection with `game: "memory"`.
-- Version shown as MEMORY v3.
-
-No authentication is used; without authentication, a player name is not a secure identity.
+- Cards render immediately without waiting for Firebase.
+- Firebase player/leaderboard setup runs in the background.
+- Leaderboard requests time out after 7 seconds instead of staying Loading forever.
+- Scores are saved as separate `game: "memory"` entries.
+- Version: MEMORY v4.

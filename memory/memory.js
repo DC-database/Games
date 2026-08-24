@@ -126,13 +126,21 @@ async function finish(){
 }
 async function submitScore(){
  const name=player||"Player";
- try{await addDoc(collection(db,"leaderboard"),{game:"memory",name,score,level,moves,time:seconds,createdAt:Date.now()});$("submit").textContent="SCORE SAVED ✓";loadLeaderboard()}
- catch(e){$("submit").textContent="SAVE FAILED";console.error(e)}
+ try{
+  await Promise.race([
+   addDoc(collection(db,"leaderboard"),{game:"memory",name,score,level,moves,time:seconds,createdAt:Date.now()}),
+   new Promise((_,reject)=>setTimeout(()=>reject(new Error("Save timed out")),7000))
+  ]);
+  $("submit").textContent="SCORE SAVED ✓";loadLeaderboard()
+ } catch(e){$("submit").textContent="SAVE FAILED";console.error(e)}
 }
 async function loadLeaderboard(){
  const list=$("leaderboard");list.innerHTML="<li>Loading…</li>";
  try{
-  const snap=await getDocs(query(collection(db,"leaderboard"),limit(300)));
+  const snap=await Promise.race([
+   getDocs(query(collection(db,"leaderboard"),limit(300))),
+   new Promise((_,reject)=>setTimeout(()=>reject(new Error("Leaderboard request timed out")),7000))
+  ]);
   const rows=[];snap.forEach(d=>{const x=d.data();if(x.game==="memory")rows.push(x)});
   rows.sort((a,b)=>Number(b.score||0)-Number(a.score||0));
   list.innerHTML="";
@@ -147,5 +155,7 @@ $("newGame").onclick=async()=>{
  level=1;score=0;seconds=0;clearInterval(timer);timer=null;build();
 };
 $("mode").onclick=()=>{level=level>=levels.length?1:level+1;score=0;seconds=0;clearInterval(timer);timer=null;build()};
-await getOrCreatePlayer();
-build();loadLeaderboard();
+// Render the game immediately. Firebase/player setup must never block the cards.
+build();
+loadLeaderboard();
+getOrCreatePlayer().catch(e=>console.warn("Player setup failed; game remains playable.",e));
