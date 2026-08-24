@@ -1,6 +1,6 @@
 
 import {initializeApp} from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
-import {getFirestore,collection,addDoc,getDocs,query,limit} from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
+import {getFirestore,collection,addDoc,getDocs,query,limit,doc,setDoc,getDoc} from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 
 const firebaseConfig={
  apiKey:"AIzaSyC2jNNzAk5ghmVE6KLOeGPtd3CCTzpw3qo",
@@ -26,20 +26,36 @@ const levels=[
 let level=1,moves=0,score=0,best=Number(localStorage.memoryBest||0),seconds=0;
 let first=null,second=null,lock=false,matched=0,timer=null,started=false,combo=0;
 let player=localStorage.memoryPlayer||"";
-if(!player){player=(prompt("Enter your player name:","Player")||"Player").trim().slice(0,18)||"Player";localStorage.memoryPlayer=player}
-
-const $=id=>document.getElementById(id);
-function cfg(){return levels[Math.min(level-1,levels.length-1)]}
-function shuffle(a){for(let i=a.length-1;i>0;i--){let j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}
-function startTimer(){if(timer)return;timer=setInterval(()=>{seconds++;update()},1000)}
-function update(){
- $("level").textContent=level;
- $("moves").textContent=moves;
- $("score").textContent=score.toLocaleString();
- $("time").textContent=Math.floor(seconds/60)+":"+String(seconds%60).padStart(2,"0");
- const target=cfg().target,prev=level===1?0:levels[level-2].target;
- $("levelFill").style.width=Math.min(100,Math.max(0,(score-prev)/(target-prev)*100))+"%";
+let playerKey="";
+async function getOrCreatePlayer(){
+  player=(player||"").trim().slice(0,18);
+  if(!player){
+    player=(prompt("Enter your player name:","Player")||"Player").trim().slice(0,18)||"Player";
+  }
+  localStorage.memoryPlayer=player;
+  playerKey=player.toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/^-+|-+$/g,"").slice(0,40)||"player";
+  try{
+    const ref=doc(db,"players",playerKey);
+    const snap=await getDoc(ref);
+    if(!snap.exists()){
+      await setDoc(ref,{displayName:player,createdAt:Date.now()},{merge:true});
+    }else{
+      const saved=String(snap.data().displayName||player).trim();
+      if(saved){player=saved;localStorage.memoryPlayer=player;}
+    }
+  }catch(e){console.warn("Player profile unavailable; using local name.",e)}
 }
+async function saveRun(reason="new-game"){
+  if(!player)return;
+  try{
+    await addDoc(collection(db,"leaderboard"),{
+      game:"memory",name:player,score:Number(score),level:Number(level),
+      moves:Number(moves),time:Number(seconds),reason,createdAt:Date.now()
+    });
+    loadLeaderboard();
+  }catch(e){console.warn("Could not save Memory run.",e)}
+}
+
 function build(){
  const c=cfg(),arr=shuffle([...icons.slice(0,c.pairs),...icons.slice(0,c.pairs)]);
  $("board").style.gridTemplateColumns=`repeat(${c.cols},1fr)`;
@@ -76,12 +92,19 @@ function check(){
  update();
 }
 function levelComplete(){
- const old=level; level++;
- const gained=250+old*100;score+=gained;best=Math.max(best,score);localStorage.memoryBest=best;
+ const old=level;
+ const gained=250+old*100;
+ score+=gained;best=Math.max(best,score);localStorage.memoryBest=best;
  burst(second||first);floatText("LEVEL UP! +"+gained,second||first);
+ if(old>=levels.length){
+   clearInterval(timer);timer=null;
+   update();
+   setTimeout(()=>finish(),700);
+   return;
+ }
+ level++;
  update();
  setTimeout(()=>{
-   if(level>levels.length)level=levels.length;
    build();
    $("message").textContent=`Level ${level} — ${cfg().pairs} pairs.`;
  },900);
@@ -92,11 +115,13 @@ function burst(card){
  for(let i=0;i<42;i++){const p=document.createElement("i");p.className="fx";p.style.left=cx+"px";p.style.top=cy+"px";p.style.background=colors[i%colors.length];const a=Math.PI*2*i/42,d=45+Math.random()*130;p.style.setProperty("--x",Math.cos(a)*d+"px");p.style.setProperty("--y",Math.sin(a)*d+"px");p.style.setProperty("--r",(Math.random()*720-360)+"deg");document.body.appendChild(p);setTimeout(()=>p.remove(),900)}
 }
 function floatText(text,card){const r=card.getBoundingClientRect();const e=document.createElement("div");e.className="float";e.textContent=text;e.style.left=(r.left+r.width/2)+"px";e.style.top=(r.top+r.height/2)+"px";document.body.appendChild(e);setTimeout(()=>e.remove(),950)}
-function finish(){
+let runSaved=false;
+async function finish(){
  clearInterval(timer);timer=null;
+ if(!runSaved){runSaved=true;await saveRun("completed");}
  const overlay=$("overlay");overlay.hidden=false;
  overlay.innerHTML=`<div class="overlay"><div class="modal"><h2>🎉 GAME COMPLETE</h2><div class="final">${score.toLocaleString()}</div><p>${player} · Level ${level} · ${moves} moves · ${Math.floor(seconds/60)}:${String(seconds%60).padStart(2,"0")}</p><button class="submit" id="submit">SUBMIT SCORE</button><button class="again" id="again">PLAY AGAIN</button></div></div>`;
- $("again").onclick=()=>{overlay.hidden=true;level=1;score=0;seconds=0;build()};
+ $("again").onclick=()=>{overlay.hidden=true;runSaved=false;level=1;score=0;seconds=0;clearInterval(timer);timer=null;build()};
  $("submit").onclick=submitScore;
 }
 async function submitScore(){
@@ -115,6 +140,12 @@ async function loadLeaderboard(){
   if(!list.children.length)list.innerHTML="<li>No scores yet — be the first!</li>";
  }catch(e){list.innerHTML="<li>Leaderboard unavailable</li>";console.error(e)}
 }
-$("newGame").onclick=()=>{level=1;score=0;seconds=0;clearInterval(timer);timer=null;build()};
+$("newGame").onclick=async()=>{
+ const hadRun=score>0||moves>0||seconds>0;
+ if(hadRun){await saveRun("new-game");}
+ runSaved=false;
+ level=1;score=0;seconds=0;clearInterval(timer);timer=null;build();
+};
 $("mode").onclick=()=>{level=level>=levels.length?1:level+1;score=0;seconds=0;clearInterval(timer);timer=null;build()};
+await getOrCreatePlayer();
 build();loadLeaderboard();
