@@ -77,21 +77,9 @@ function showPreview(point){
   }
  });
 }
-function makeGhost(piece,x,y){
- if(dragGhost)dragGhost.remove();
- dragGhost=document.createElement("div");dragGhost.className="dragGhost";
- const sh=document.createElement("div");sh.className="shape";
- for(let yy=0;yy<5;yy++)for(let xx=0;xx<5;xx++){
-  const m=document.createElement("i");m.className="mini";
-  const on=piece.shape.some(([sx,sy])=>sx===xx&&sy===yy);
-  if(on){m.style.background=piece.color;m.dataset.empty="0"}else{m.dataset.empty="1"}
-  sh.appendChild(m);
- }
- dragGhost.appendChild(sh);document.body.appendChild(dragGhost);moveGhost(x,y);
-}
-function moveGhost(x,y){
- if(!dragGhost)return;const p=dragPoint(x,y);
- dragGhost.style.left=p.x+"px";dragGhost.style.top=p.y+"px";showPreview(p);
+function moveDrag(x,y){
+ const p=dragPoint(x,y);
+ showPreview(p);
 }
 
 function beginDrag(index,e){
@@ -102,11 +90,9 @@ function beginDrag(index,e){
  activePointerId=e.pointerId;
  try{e.currentTarget.setPointerCapture(e.pointerId)}catch(_){}
  e.currentTarget.classList.add("selected");
- makeGhost(p,e.clientX,e.clientY);
- moveGhost(e.clientX,e.clientY);
+ moveDrag(e.clientX,e.clientY);
 }
 function cancelDrag(){
- if(dragGhost)dragGhost.remove();
  dragGhost=null;
  clearPreview();
  dragging=null;
@@ -126,7 +112,7 @@ function endDrag(e){
   $("message").textContent=lines?`✨ ${lines} line${lines>1?"s":""} cleared!`:"Good move. Keep building.";
   p.used=true;if(pieces.every(x=>x.used))pieces=[makePiece(),makePiece(),makePiece()];
  }else $("message").textContent="Not placed — move to a valid position and release.";
- if(dragGhost)dragGhost.remove();dragGhost=null;clearPreview();dragging=null;activePointerId=null;document.querySelectorAll(".piece.selected").forEach(e=>e.classList.remove("selected"));render();
+ dragGhost=null;clearPreview();dragging=null;activePointerId=null;document.querySelectorAll(".piece.selected").forEach(e=>e.classList.remove("selected"));render();
  if(can){
   const possible=pieces.some(p=>!p.used&&board.some((row,r)=>row.some((_,c)=>fit(p.shape,r,c))));
   if(!possible)gameOver();
@@ -191,7 +177,7 @@ function newGame(){board=Array.from({length:N},()=>Array(N).fill(null));pieces=[
 window.addEventListener("pointermove",e=>{
  if(!dragging || e.pointerId!==activePointerId)return;
  e.preventDefault();
- moveGhost(e.clientX,e.clientY);
+ moveDrag(e.clientX,e.clientY);
 },{passive:false});
 window.addEventListener("pointerup",e=>{
  if(!dragging || e.pointerId!==activePointerId)return;

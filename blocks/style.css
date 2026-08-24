@@ -226,3 +226,16 @@ button{border:0;border-radius:11px;padding:12px 16px;font-weight:1000;cursor:poi
     height:10px !important;
   }
 }
+
+/* v9: clean drag — no floating duplicate while moving */
+.dragGhost{display:none!important}
+.piece.selected{
+  opacity:0!important;
+  transform:none!important;
+  box-shadow:none!important;
+  border-color:transparent!important;
+}
+.piece.selected .shape{visibility:hidden!important}
+.cell.preview{
+  box-shadow:inset 0 0 0 1px #ffffff66, 0 0 10px #ffffff22;
+}
