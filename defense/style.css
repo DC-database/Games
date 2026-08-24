@@ -5,3 +5,9 @@
 .panel{box-shadow:0 20px 70px #0008}
 .tower:hover{border-color:#a88b4a;background:#18291f}
 .start{box-shadow:0 7px 20px #0005}
+
+/* Tiny Swords visual upgrade */
+.board-card{background:#6f9e4b}
+.panel{background:linear-gradient(180deg,#102117,#0a1510)}
+.tower-icon{font-size:22px}
+footer{font-size:10px!important;color:#6f8778!important}
