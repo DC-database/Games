@@ -1,59 +1,7 @@
-<!doctype html>
-<html lang="en">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
-<title>IRWFLIX PLAY — Defense</title>
-<link rel="stylesheet" href="style.css">
-</head>
-<body>
-<div class="app">
-<header>
-  <div class="brand">IRWFLIX <span>PLAY</span></div>
-  <div class="version">DEFENSE v5 • 2D</div>
-  <div class="stats">
-    <div><small>WAVE</small><b id="wave">0/20</b></div>
-    <div><small>❤️ BASE</small><b id="lives">20</b></div>
-    <div><small>💰 GOLD</small><b id="gold">300</b></div>
-    <div><small>SCORE</small><b id="score">0</b></div>
-  </div>
-</header>
-
-<main>
-  <section class="game-shell">
-    <canvas id="game" width="1200" height="720"></canvas>
-    <div id="countdown" class="countdown"></div>
-    <div id="toast" class="toast"></div>
-    <div class="bossbar hidden" id="bossbar"><div><span id="bossName">BOSS</span><b id="bossHpText"></b></div><i id="bossHp"></i></div>
-  </section>
-
-  <section class="controls">
-    <div class="palette">
-      <button class="tower-btn selected" data-type="archer"><span class="tower-icon">🏹</span><b>ARCHER</b><small>$75</small></button>
-      <button class="tower-btn" data-type="cannon"><span class="tower-icon">💣</span><b>CANNON</b><small>$125</small></button>
-      <button class="tower-btn" data-type="mage"><span class="tower-icon">🔮</span><b>MAGE</b><small>$175</small></button>
-    </div>
-    <div class="action-row">
-      <button id="start">START WAVE</button>
-      <button id="hero">🦸 HERO</button>
-      <button id="end">END RUN</button>
-    </div>
-  </section>
-
-  <aside id="panel" class="panel hidden">
-    <div class="panel-title"><div><small id="selType">TOWER</small><h2 id="selName">Archer Tower</h2></div><button id="closePanel">×</button></div>
-    <div class="panel-stats"><span>LEVEL <b id="selLevel">1</b></span><span>DAMAGE <b id="selDamage">15</b></span><span>RANGE <b id="selRange">150</b></span></div>
-    <p id="selDesc"></p>
-    <button id="upgrade">UPGRADE</button>
-    <button id="sell" class="secondary">SELL</button>
-  </aside>
-
-  <section class="leader">
-    <div class="leader-head"><h2>🏆 GLOBAL LEADERBOARD</h2><button id="refresh">↻</button></div>
-    <ol id="scores"><li>Loading…</li></ol>
-  </section>
-</main>
-</div>
-<script src="game.js"></script>
-</body>
-</html>
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no"><title>IRWFLIX PLAY — Defense</title><link rel="stylesheet" href="style.css"></head><body><div class="app">
+<header><div class="brand">IRWFLIX <span>PLAY</span></div><div class="version">DEFENSE v15 • SUMMER ASSET • MOVEMENT FIX</div><div class="stats"><div><small>WAVE</small><b id="wave">0/20</b></div><div><small>❤️ BASE</small><b id="lives">20</b></div><div><small>💰 GOLD</small><b id="gold">300</b></div><div><small>SCORE</small><b id="score">0</b></div></div></header>
+<main><section class="game-shell"><canvas id="game" width="1200" height="720"></canvas><div id="toast" class="toast"></div><div id="bossbar" class="bossbar hidden"><div><span id="bossName">BOSS</span><b id="bossHpText"></b></div><i id="bossHp"></i></div></section>
+<section class="controls"><div class="build-label"><span>BUILD TOWERS</span><small>Drag a tower or tap one, then tap a glowing build pad</small></div><div class="palette"><button class="tower-btn selected" data-type="archer"><img src="assets/towers/archer.png"><span><b>WATCHTOWER</b><small>$75</small></span></button><button class="tower-btn" data-type="cannon"><img src="assets/towers/cannon.png"><span><b>GUARD TOWER</b><small>$125</small></span></button><button class="tower-btn" data-type="mage"><img src="assets/towers/mage.png"><span><b>MAGIC STONE</b><small>$175</small></span></button></div><div class="action-row"><button id="start">START WAVE</button><button id="hero">🦸 HERO</button><button id="end">END RUN</button></div></section>
+<aside id="panel" class="panel hidden"><div class="panel-title"><div><small id="selType">TOWER</small><h2 id="selName">Watchtower</h2></div><button id="closePanel">×</button></div><div class="panel-stats"><span>LEVEL <b id="selLevel">1</b></span><span>DAMAGE <b id="selDamage">15</b></span><span>RANGE <b id="selRange">150</b></span></div><p id="selDesc"></p><button id="upgrade">UPGRADE</button><button id="sell" class="secondary">SELL</button></aside>
+<section class="leader"><div class="leader-head"><h2>🏆 LOCAL TOP 10</h2><button id="refresh">↻</button></div><ol id="scores"></ol></section></main></div>
+<div id="resultModal" class="result-modal hidden"><div class="result-card"><div class="result-kicker">RUN COMPLETE</div><h1 id="resultTitle">GAME OVER</h1><div class="result-summary"><div><small>WAVE</small><b id="resultWave">0/20</b></div><div><small>FINAL SCORE</small><b id="resultScore">0</b></div></div><p id="resultStatus">Your run is ready to register.</p><button id="submitResult" class="result-primary">SUBMIT SCORE</button><button id="newRun" class="result-secondary">NEW GAME</button></div></div><script src="game.js"></script></body></html>
