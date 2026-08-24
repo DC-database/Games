@@ -63,7 +63,7 @@ function cellFromPoint(x,y){
  const c=Math.floor((x-rect.left-pad)/(cell+gap)),r=Math.floor((y-rect.top-pad)/(cell+gap));
  return r>=0&&r<N&&c>=0&&c<N?{r,c}:null;
 }
-const TOUCH_LIFT_PX=140; // invisible magnetic repulsion: keeps the lifted block well above the fingertip
+const TOUCH_LIFT_PX=220; // invisible magnetic repulsion: keeps the lifted block well above the fingertip
 function dragPoint(x,y){
  // Project the finger onto the board. The finger may stay completely
  // outside the board; the logical piece position is clamped to the board.
