@@ -7,30 +7,19 @@
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
-<div id="nameModal" class="name-modal">
-  <div class="name-box">
-    <div class="eyebrow">REALM DEFENSE</div>
-    <h2>Choose Your Name</h2>
-    <p>This name will appear on the leaderboard.</p>
-    <input id="playerNameInput" maxlength="18" placeholder="Enter player name" autocomplete="off">
-    <button id="nameStartBtn">START GAME</button>
-  </div>
-</div>
-<div id="countdown" class="countdown"></div>
 <div id="app">
   <header class="topbar">
     <div>
       <div class="eyebrow">REALM DEFENSE</div>
       <h1>Forest Outpost</h1>
     </div>
-    <div class="player-tag">👤 <b id="playerName">Player</b></div>
     <div class="stats">
       <div class="stat"><span>❤️</span><b id="lives">20</b></div>
       <div class="stat"><span>💰</span><b id="gold">250</b></div>
       <div class="stat"><span>🌊</span><b id="wave">0/20</b></div>
       <div class="stat"><span>🏆</span><b id="score">0</b></div>
     </div>
-  <span class="build-version">v4</span></header>
+  </header>
 
   <main class="game-wrap">
     <section class="board-card">
@@ -44,7 +33,7 @@
           <div class="eyebrow">COMMAND</div>
           <h2>Build Towers</h2>
         </div>
-        <button id="startBtn" class="start">START GAME</button>
+        <button id="startBtn" class="start">START WAVE</button>
       </div>
 
       <div class="tower-grid">
@@ -74,14 +63,99 @@
       </div>
 
       <div class="leaderboard">
-        <div class="lb-head"><b>LEADERBOARD</b><span>Local</span></div>
+        <div class="lb-head"><b>LEADERBOARD</b><span>GLOBAL</span></div>
         <div id="scores"></div>
       </div>
     </aside>
   </main>
 
-  <footer>IRWFLIX DEFENSE • Tiny Swords Edition • Firebase-ready</footer>
+  <footer>Realm Defense • Prototype 1.0 • Firebase-ready</footer>
 </div>
 <script type="module" src="game.js"></script>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
+import { getFirestore, collection, addDoc, getDocs, query, limit } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyC2jNNzAk5ghmVE6KLOeGPtd3CCTzpw3qo",
+  authDomain: "leaderboard-90b9b.firebaseapp.com",
+  projectId: "leaderboard-90b9b",
+  storageBucket: "leaderboard-90b9b.firebasestorage.app",
+  messagingSenderId: "891059392275",
+  appId: "1:891059392275:web:757305992c2d83d39214e6",
+  measurementId: "G-RXNVYRFXC5"
+};
+
+const db = getFirestore(initializeApp(firebaseConfig));
+const defensePlayer = localStorage.getItem("defensePlayer") || localStorage.getItem("memoryPlayer") || "Player";
+localStorage.setItem("defensePlayer", defensePlayer);
+
+window.saveDefenseScoreToFirebase = async function(score, wave, reason) {
+  try {
+    await addDoc(collection(db, "leaderboard"), {
+      game: "defense",
+      name: defensePlayer,
+      score: Number(score) || 0,
+      wave: Number(wave) || 0,
+      reason: reason || "game-over",
+      createdAt: Date.now()
+    });
+    return true;
+  } catch (e) {
+    console.error("Defense Firebase leaderboard save failed:", e);
+    return false;
+  }
+};
+
+window.loadDefenseTop10 = async function() {
+  try {
+    const snap = await getDocs(query(collection(db, "leaderboard"), limit(1000)));
+    const rows = [];
+    snap.forEach(d => {
+      const x = d.data();
+      if (x.game === "defense") rows.push(x);
+    });
+    rows.sort((a,b) => Number(b.score||0) - Number(a.score||0));
+    return rows.slice(0,10);
+  } catch (e) {
+    console.error("Defense leaderboard load failed:", e);
+    return [];
+  }
+};
+</script>
+
+
+<script>
+window.__defenseFirebaseSaved = false;
+window.__saveDefenseFinalScore = async function(reason) {
+  if (window.__defenseFirebaseSaved) return;
+  window.__defenseFirebaseSaved = true;
+  try {
+    const score =
+      (typeof window.score === "number" ? window.score : null) ??
+      (typeof score !== "undefined" ? score : 0);
+    const wave =
+      (typeof window.wave === "number" ? window.wave : null) ??
+      (typeof wave !== "undefined" ? wave : 0);
+    if (typeof window.saveDefenseScoreToFirebase === "function") {
+      await window.saveDefenseScoreToFirebase(score, wave, reason);
+    }
+  } catch(e) { console.error(e); }
+};
+</script>
+
+
+<script>
+document.addEventListener("click", e=>{
+  const t=e.target;
+  if(!t)return;
+  const txt=(t.textContent||"").trim().toLowerCase();
+  if(txt==="game over" || txt.includes("play again") || txt.includes("restart")){
+    if(window.__saveDefenseFinalScore) window.__saveDefenseFinalScore("game-over");
+  }
+});
+</script>
+
 </body>
 </html>
