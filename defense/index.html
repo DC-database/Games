@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Realm Defense</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div id="nameModal" class="name-modal">
+  <div class="name-box">
+    <div class="eyebrow">REALM DEFENSE</div>
+    <h2>Choose Your Name</h2>
+    <p>This name will appear on the leaderboard.</p>
+    <input id="playerNameInput" maxlength="18" placeholder="Enter player name" autocomplete="off">
+    <button id="nameStartBtn">START GAME</button>
+  </div>
+</div>
+<div id="countdown" class="countdown"></div>
+<div id="app">
+  <header class="topbar">
+    <div>
+      <div class="eyebrow">REALM DEFENSE</div>
+      <h1>Forest Outpost</h1>
+    </div>
+    <div class="player-tag">👤 <b id="playerName">Player</b></div>
+    <div class="stats">
+      <div class="stat"><span>❤️</span><b id="lives">20</b></div>
+      <div class="stat"><span>💰</span><b id="gold">250</b></div>
+      <div class="stat"><span>🌊</span><b id="wave">0/20</b></div>
+      <div class="stat"><span>🏆</span><b id="score">0</b></div>
+    </div>
+  </header>
+
+  <main class="game-wrap">
+    <section class="board-card">
+      <canvas id="game" width="1100" height="650"></canvas>
+      <div id="message" class="message">Build your defenses.</div>
+    </section>
+
+    <aside class="panel">
+      <div class="panel-head">
+        <div>
+          <div class="eyebrow">COMMAND</div>
+          <h2>Build Towers</h2>
+        </div>
+        <button id="startBtn" class="start">START GAME</button>
+      </div>
+
+      <div class="tower-grid">
+        <button class="tower selected" data-type="arrow">
+          <span class="tower-icon">🏹</span><span><b>Archer</b><small>Fast • $75</small></span>
+        </button>
+        <button class="tower" data-type="cannon">
+          <span class="tower-icon">💣</span><span><b>Cannon</b><small>Area • $125</small></span>
+        </button>
+        <button class="tower" data-type="mage">
+          <span class="tower-icon">🔮</span><span><b>Mage</b><small>Strong • $175</small></span>
+        </button>
+      </div>
+
+      <div class="selected-card">
+        <div class="selected-title"><span id="selIcon">🏹</span><div><b id="selName">Archer Tower</b><small id="selDesc">Fast single-target defense</small></div></div>
+        <div class="upgrade-row">
+          <button id="upgradeBtn">UPGRADE <span id="upgradeCost">$100</span></button>
+          <button id="sellBtn" class="danger">SELL</button>
+        </div>
+      </div>
+
+      <div class="help">
+        <b>How to play</b>
+        <p>Choose a tower, then click an empty build pad. Start each wave and defend the crystal.</p>
+        <p>Click a placed tower to select it. Upgrade it as you earn gold.</p>
+      </div>
+
+      <div class="leaderboard">
+        <div class="lb-head"><b>LEADERBOARD</b><span>Local</span></div>
+        <div id="scores"></div>
+      </div>
+    </aside>
+  </main>
+
+  <footer>Realm Defense • Prototype 1.0 • Firebase-ready</footer>
+</div>
+<script type="module" src="game.js"></script>
+</body>
+</html>

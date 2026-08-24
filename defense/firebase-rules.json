@@ -1,0 +1,11 @@
+{
+  "rules": {
+    ".read": true,
+    ".write": false,
+    "scores": {
+      "$scoreId": {
+        ".write": "!data.exists() && newData.hasChildren(['name','score']) && newData.child('name').isString() && newData.child('score').isNumber() && newData.child('score').val() >= 0 && newData.child('score').val() <= 100000000"
+      }
+    }
+  }
+}
