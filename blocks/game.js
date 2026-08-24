@@ -13,17 +13,38 @@ const FIRESTORE_COLLECTION_URL=`${FIRESTORE_URL}?key=${encodeURIComponent(FIREBA
 
 const N=10;
 const COLORS=["#ff4f9a","#8d62ff","#ff5b54","#39b8ff","#41d68a","#ffd34f","#27d5c7","#ff9d38"];
+// Shape progression: keep the early game simple and introduce only a small
+// number of new shapes every 3 stages. The player learns the basic pieces
+// before the full shape pool becomes available.
 const SHAPES=[
- [[0,0],[1,0],[2,0],[3,0]],
- [[0,0],[0,1],[1,1],[2,1]],
- [[1,0],[0,1],[1,1],[2,1]],
- [[0,0],[1,0],[0,1],[1,1]],
- [[0,0],[1,0],[1,1],[2,1]],
- [[0,0],[0,1],[0,2],[1,2]],
- [[0,0],[1,0],[2,0],[2,1],[2,2]],
- [[0,0],[0,1],[1,1],[2,1],[2,2]],
- [[0,0],[1,0],[2,0],[1,1]]
+ [[0,0],[1,0],[2,0],[3,0]], // I
+ [[0,0],[0,1],[1,1],[2,1]], // L
+ [[1,0],[0,1],[1,1],[2,1]], // T
+ [[0,0],[1,0],[0,1],[1,1]], // O
+ [[0,0],[1,0],[1,1],[2,1]], // S
+ [[0,0],[0,1],[0,2],[1,2]], // J
+ [[0,0],[1,0],[2,0],[2,1],[2,2]], // long L / 5-block
+ [[0,0],[0,1],[1,1],[2,1],[2,2]], // long Z / 5-block
+ [[0,0],[1,0],[2,0],[1,1]], // 3-wide T
+ [[0,0],[1,0],[2,0],[0,1],[1,1],[2,1]], // 6-box rectangle: 3x2 landscape (rotates to 2x3 portrait)
+ [[0,0],[1,0],[2,0],[0,1],[1,1],[2,1],[0,2],[1,2],[2,2]] // 9-box square: 3x3
 ];
+
+// Stage 1-3: 4 familiar shapes
+// Stage 4-6: +1 shape
+// Stage 7-9: +1 shape
+// Stage 10-12: +1 shape
+// Stage 13-15: +1 shape
+// Stage 16-18: +1 shape
+// Stage 19-21: +1 shape (6-box rectangle, appears landscape or portrait)
+// Stage 22-24: +1 shape (9-box square)
+// Stage 25+: full pool
+const SHAPE_UNLOCK_EVERY=3;
+const STARTING_SHAPES=4;
+function unlockedShapeCount(){
+ return Math.min(SHAPES.length, STARTING_SHAPES + Math.floor((Math.max(1,stage)-1)/SHAPE_UNLOCK_EVERY));
+}
+function unlockedShapes(){return SHAPES.slice(0,unlockedShapeCount());}
 
 let board=[],pieces=[],score=0,best=Number(localStorage.blocksBest||0);
 const START_TIME=120, MOVE_BONUS=3, STAGE_CLEAR_BONUS=30, MAX_TIME=180;
@@ -157,7 +178,8 @@ function rotate(shape){
  return a.map(([x,y])=>[x-minX,y-minY]);
 }
 function makePiece(){
- let shape=SHAPES[Math.floor(Math.random()*SHAPES.length)].map(p=>p.slice());
+ const pool=unlockedShapes();
+ let shape=pool[Math.floor(Math.random()*pool.length)].map(p=>p.slice());
  for(let i=Math.floor(Math.random()*4);i--;)shape=rotate(shape);
  return {shape,color:COLORS[Math.floor(Math.random()*COLORS.length)],used:false};
 }
@@ -414,7 +436,7 @@ function showStageTransition(bonus){
  const el=document.createElement('div');el.className='stage-transition';
  el.innerHTML=`<small>AREA CLEARED</small><strong>STAGE ${stage}</strong><span>+${bonus.toLocaleString()} POINTS</span><em>NEW AREA</em>`;
  document.body.appendChild(el);setTimeout(()=>el.remove(),1700);
- $('message').textContent=`🌍 Stage ${stage} — new area!`;
+ $('message').textContent=`🌍 Stage ${stage} — new area! ${unlockedShapeCount()} shapes available.`;
 }
 function stageName(){const names=['CITY','FOREST','DESERT','ICE','VOLCANO','NEON CITY','SPACE','UNKNOWN'];return names[Math.min(stage-1,names.length-1)];}
 
