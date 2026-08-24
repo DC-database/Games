@@ -1,0 +1,34 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>IRWFLIX Memory Match</title>
+<meta name="memory-version" content="v1">
+<link rel="stylesheet" href="style.css">
+
+</head>
+<body>
+<div class="app">
+<header><div class="logo">IRWFLIX PLAY</div><div class="version">MEMORY v1</div></header>
+<div class="stats">
+ <div class="stat"><small>LEVEL</small><b id="level">1</b><div class="progress"><i id="levelFill"></i></div></div>
+ <div class="stat"><small>MOVES</small><b id="moves">0</b></div>
+ <div class="stat"><small>TIME</small><b id="time">0:00</b></div>
+ <div class="stat"><small>SCORE</small><b id="score">0</b></div>
+</div>
+<section class="game">
+ <div class="top"><h1>🧠 Memory Match</h1><span id="target">Match all pairs</span></div>
+ <div id="combo" class="combo"></div>
+ <div id="message" class="message">Tap a card to begin.</div>
+ <div id="board" class="board"></div>
+ <div class="controls"><button class="new" id="newGame">NEW GAME</button><button class="mode" id="mode">LEVEL 1</button></div>
+</section>
+<section class="leader"><h2>🏆 GLOBAL LEADERBOARD</h2><ol id="leaderboard"><li>Loading…</li></ol></section>
+</div>
+<div id="overlay" hidden></div>
+
+<script type="module" src="memory.js"></script>
+
+</body>
+</html>
