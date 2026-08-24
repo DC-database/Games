@@ -64,13 +64,8 @@ function cellFromPoint(x,y){
  return r>=0&&r<N&&c>=0&&c<N?{r,c}:null;
 }
 function dragPoint(x,y){
-  // The finger stays below the piece. The piece itself is projected into
-  // the board area so it never covers the finger or flies outside the board.
-  const rect=$("board").getBoundingClientRect();
-  const lift=82;
-  const targetX=Math.max(rect.left+8,Math.min(x,rect.right-8));
-  const targetY=Math.max(rect.top+12,Math.min(y-lift,rect.bottom-12));
-  return {x:targetX,y:targetY};
+ // Finger is free to move anywhere. The floating piece stays above it.
+ return {x:x,y:y-72};
 }
 function clearPreview(){document.querySelectorAll(".cell.preview,.cell.invalid").forEach(e=>e.classList.remove("preview","invalid"))}
 function showPreview(point){
