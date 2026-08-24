@@ -15,7 +15,7 @@
 </head>
 <body>
 <div class="app">
-<header><div class="logo">IRWFLIX PLAY</div><div class="ver">DASHBOARD v5</div></header>
+<header><div class="logo">IRWFLIX PLAY</div><div class="ver">DASHBOARD v7</div></header>
 <section class="hero"><h1 id="welcome">Welcome to IRWFLIX PLAY 👋</h1><p>Every completed run is a score entry. Top scores are ranked independently for each game.</p><div class="total"><small>YOUR BEST SCORES COMBINED</small><b id="total">—</b></div></section>
 <section class="games">
 <article class="game"><h2>🏰 Defense</h2><div class="topscore" id="defTop">—</div><div class="note" id="defName">Loading…</div><a class="play" href="./defense/">PLAY</a></article>
@@ -35,39 +35,68 @@
 </section>
 </div>
 <script type="module">
-import{initializeApp}from"https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
-import{getFirestore,collection,getDocs,query,limit}from"https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
-const firebaseConfig={apiKey:"AIzaSyC2jNNzAk5ghmVE6KLOeGPtd3CCTzpw3qo",authDomain:"leaderboard-90b9b.firebaseapp.com",projectId:"leaderboard-90b9b",storageBucket:"leaderboard-90b9b.firebasestorage.app",messagingSenderId:"891059392275",appId:"1:891059392275:web:757305992c2d83d39214e6",measurementId:"G-RXNVYRFXC5"};
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-app.js";
+import { getFirestore, collection, getDocs, query, limit } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js";
+
+const firebaseConfig={
+  apiKey:"AIzaSyC2jNNzAkghmVE6KLOeGPtd3CCTzpw3qo",
+  authDomain:"leaderboard-90b9b.firebaseapp.com",
+  projectId:"leaderboard-90b9b",
+  storageBucket:"leaderboard-90b9b.firebasestorage.app",
+  messagingSenderId:"891059392275",
+  appId:"1:891059392275:web:757305992c2d83d39214e6",
+  measurementId:"G-RXNVYRFXC5"
+};
 const db=getFirestore(initializeApp(firebaseConfig));
 const esc=s=>String(s??"").replace(/[<>&"]/g,"");
 let scores={blocks:[],defense:[],memory:[]},current="blocks";
+
 async function load(){
- try{
-  const snap=await getDocs(query(collection(db,"leaderboard"),limit(1000)));
-  snap.forEach(d=>{const x=d.data();if(scores[x.game])scores[x.game].push(x)});
-  for(const g of Object.keys(scores))scores[g].sort((a,b)=>Number(b.score||0)-Number(a.score||0));
-  for(const g of Object.keys(scores)){
-   const top=scores[g][0], el=document.getElementById(g+"Top"), nm=document.getElementById(g+"Name");
-   el.textContent=top?Number(top.score||0).toLocaleString():"—";
-   nm.textContent=top?`#1 ${esc(top.name||"Player")}`:"No scores yet";
+  const status=document.getElementById("status");
+  status.textContent="Loading scores…";
+  try{
+    const snap=await Promise.race([
+      getDocs(query(collection(db,"leaderboard"),limit(1000))),
+      new Promise((_,reject)=>setTimeout(()=>reject(new Error("Leaderboard request timed out")),8000))
+    ]);
+    snap.forEach(d=>{
+      const x=d.data();
+      if(scores[x.game]) scores[x.game].push(x);
+    });
+    for(const g of Object.keys(scores)) scores[g].sort((a,b)=>Number(b.score||0)-Number(a.score||0));
+
+    for(const g of Object.keys(scores)){
+      const top=scores[g][0];
+      document.getElementById(g+"Top").textContent=top?Number(top.score||0).toLocaleString():"—";
+      document.getElementById(g+"Name").textContent=top?`#1 ${esc(top.name||"Player")}`:"No scores yet";
+    }
+
+    const bestBy={};
+    for(const g of Object.keys(scores)) for(const x of scores[g]){
+      const n=String(x.name||"Player");
+      bestBy[n]??={blocks:0,defense:0,memory:0};
+      bestBy[n][g]=Math.max(bestBy[n][g],Number(x.score||0));
+    }
+    const best=Object.values(bestBy).map(p=>p.blocks+p.defense+p.memory).sort((a,b)=>b-a)[0]||0;
+    document.getElementById("total").textContent=best.toLocaleString();
+    render();
+  }catch(e){
+    console.error(e);
+    status.textContent="Leaderboard unavailable — check Firebase Firestore rules.";
+    document.getElementById("rows").innerHTML='<div class="row"><span>!</span><span>Could not load leaderboard</span><span class="right">—</span></div>';
   }
-  const bestBy={};for(const g of Object.keys(scores))for(const x of scores[g]){
-    const n=String(x.name||"Player");bestBy[n]??={blocks:0,defense:0,memory:0};
-    bestBy[n][g]=Math.max(bestBy[n][g],Number(x.score||0));
-  }
-  const total=Object.values(bestBy).reduce((sum,p)=>sum+p.blocks+p.defense+p.memory,0);
-  const topPlayer=Object.entries(bestBy).map(([name,p])=>({name,total:p.blocks+p.defense+p.memory})).sort((a,b)=>b.total-a.total)[0];
-  document.getElementById("total").textContent=topPlayer?topPlayer.total.toLocaleString():"—";
-  render();
- }catch(e){document.getElementById("status").textContent="Leaderboard unavailable.";console.error(e)}
 }
 function render(){
- const arr=scores[current].slice(0,10), rows=document.getElementById("rows");
- rows.innerHTML='<div class="row head"><span>#</span><span>PLAYER</span><span class="right">SCORE</span></div>';
- arr.forEach((x,i)=>rows.insertAdjacentHTML("beforeend",`<div class="row"><span>${i+1}</span><b>${esc(x.name||"Player")}</b><span class="right">${Number(x.score||0).toLocaleString()}</span></div>`));
- document.getElementById("status").textContent=arr.length?`${arr.length} score ${arr.length===1?"entry":"entries"} shown`:"No scores yet — be the first!";
+  const arr=scores[current].slice(0,10),rows=document.getElementById("rows");
+  rows.innerHTML='<div class="row head"><span>#</span><span>PLAYER</span><span class="right">SCORE</span></div>';
+  arr.forEach((x,i)=>rows.insertAdjacentHTML("beforeend",
+    `<div class="row"><span>${i+1}</span><b>${esc(x.name||"Player")}</b><span class="right">${Number(x.score||0).toLocaleString()}</span></div>`));
+  document.getElementById("status").textContent=arr.length?`${arr.length} score ${arr.length===1?"entry":"entries"} shown`:"No scores yet — be the first!";
 }
-document.querySelectorAll(".tabs button").forEach(b=>b.onclick=()=>{document.querySelectorAll(".tabs button").forEach(x=>x.classList.remove("active"));b.classList.add("active");current=b.dataset.game;render()});
+document.querySelectorAll(".tabs button").forEach(b=>b.onclick=()=>{
+  document.querySelectorAll(".tabs button").forEach(x=>x.classList.remove("active"));
+  b.classList.add("active");current=b.dataset.game;render();
+});
 load();
 </script>
 </body></html>

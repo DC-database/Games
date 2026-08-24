@@ -1,0 +1,27 @@
+PASTE THESE RULES INTO FIRESTORE DATABASE > RULES
+
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /leaderboard/{docId} {
+      allow read: if true;
+      allow create: if
+        request.resource.data.game in ['blocks','memory','defense'] &&
+        request.resource.data.name is string &&
+        request.resource.data.name.size() >= 1 &&
+        request.resource.data.name.size() <= 30 &&
+        request.resource.data.score is number &&
+        request.resource.data.score >= 0 &&
+        request.resource.data.score <= 100000000;
+      allow update, delete: if false;
+    }
+    match /players/{playerId} {
+      allow read: if true;
+      allow create, update: if
+        request.resource.data.displayName is string &&
+        request.resource.data.displayName.size() >= 1 &&
+        request.resource.data.displayName.size() <= 30;
+      allow delete: if false;
+    }
+  }
+}
