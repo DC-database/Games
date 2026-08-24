@@ -77,9 +77,32 @@ function showPreview(point){
   }
  });
 }
+function makeDragGhost(piece){
+ if(dragGhost)dragGhost.remove();
+ dragGhost=document.createElement("div");
+ dragGhost.className="dragGhost";
+ const sh=document.createElement("div");sh.className="shape";
+ for(let y=0;y<5;y++)for(let x=0;x<5;x++){
+  const m=document.createElement("i");m.className="mini";
+  const on=piece.shape.some(([sx,sy])=>sx===x&&sy===y);
+  if(on){m.style.background=piece.color;m.dataset.empty="0"}else{m.style.background="transparent";m.dataset.empty="1"}
+  sh.appendChild(m);
+ }
+ dragGhost.appendChild(sh);document.body.appendChild(dragGhost);
+}
+function moveGhost(x,y){
+ if(!dragGhost)return;
+ const w=dragGhost.offsetWidth||90,h=dragGhost.offsetHeight||90;
+ // Keep the piece above the finger so the finger never hides the target.
+ let left=x-w/2, top=y-h-28;
+ left=Math.max(6,Math.min(left,window.innerWidth-w-6));
+ top=Math.max(8,top);
+ dragGhost.style.left=left+"px";dragGhost.style.top=top+"px";
+}
 function moveDrag(x,y){
  const p=dragPoint(x,y);
  showPreview(p);
+ moveGhost(x,y);
 }
 
 function beginDrag(index,e){
@@ -88,11 +111,13 @@ function beginDrag(index,e){
  e.preventDefault();
  dragging=p;
  activePointerId=e.pointerId;
+ makeDragGhost(p);
  try{e.currentTarget.setPointerCapture(e.pointerId)}catch(_){}
  e.currentTarget.classList.add("selected");
  moveDrag(e.clientX,e.clientY);
 }
 function cancelDrag(){
+ if(dragGhost)dragGhost.remove();
  dragGhost=null;
  clearPreview();
  dragging=null;
@@ -112,6 +137,7 @@ function endDrag(e){
   $("message").textContent=lines?`✨ ${lines} line${lines>1?"s":""} cleared!`:"Good move. Keep building.";
   p.used=true;if(pieces.every(x=>x.used))pieces=[makePiece(),makePiece(),makePiece()];
  }else $("message").textContent="Not placed — move to a valid position and release.";
+ if(dragGhost)dragGhost.remove();
  dragGhost=null;clearPreview();dragging=null;activePointerId=null;document.querySelectorAll(".piece.selected").forEach(e=>e.classList.remove("selected"));render();
  if(can){
   const possible=pieces.some(p=>!p.used&&board.some((row,r)=>row.some((_,c)=>fit(p.shape,r,c))));
@@ -172,7 +198,7 @@ async function loadLeaderboard(){
  }catch(err){console.error(err);status.textContent="Leaderboard not connected yet."}
 }
 function escapeHtml(s){return s.replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[m]))}
-function newGame(){board=Array.from({length:N},()=>Array(N).fill(null));pieces=[makePiece(),makePiece(),makePiece()];score=0;dragging=null;$("over").classList.remove("show");$("message").textContent="Press and hold a piece, then drag it onto the board.";render()}
+function newGame(){if(dragGhost)dragGhost.remove();dragGhost=null;board=Array.from({length:N},()=>Array(N).fill(null));pieces=[makePiece(),makePiece(),makePiece()];score=0;dragging=null;$("over").classList.remove("show");$("message").textContent="Press and hold a piece, then drag it onto the board.";render()}
 
 window.addEventListener("pointermove",e=>{
  if(!dragging || e.pointerId!==activePointerId)return;
