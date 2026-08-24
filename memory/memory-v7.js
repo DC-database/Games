@@ -36,7 +36,7 @@ const emojiSVG={
   wolf:"🐺",deer:"🦌",owl:"🦉",frog:"🐸",hedgehog:"🦔",squirrel:"🐿️",panda:"🐼",koala:"🐨",rhino:"🦏",hippo:"🦛",
   cheetah:"🐆",crocodile:"🐊",parrot:"🦜",flamingo:"🦩",snake:"🐍",horse:"🐴",pig:"🐷",sheep:"🐑",goat:"🐐",duck:"🦆",
   cow:"🐮",hamster:"🐹",mouse:"🐭",jellyfish:"🪼",seal:"🦭",penguin:"🐧",kangaroo:"🦘",gorilla:"🦍",
-  leopard:"🐆",sloth:"🦥",otter:"🦦",eagle:"🦅",peacock:"🦚",lizard:"🦎",snail:"🐌"
+  leopard:"🐆",sloth:"🦥",otter:"🦦",eagle:"🦅",peacock:"🦚",lizard:"🦎",snail:"🐌",seahorse:"🐴"
 };
 function animalSvg(name){return `<svg viewBox="0 0 100 100" role="img" aria-label="${name}"><text x="50" y="74" text-anchor="middle" font-size="68" font-family="Apple Color Emoji, Segoe UI Emoji, Noto Color Emoji, sans-serif">${emojiSVG[name]||"❓"}</text></svg>`}
 const SVG={
@@ -54,6 +54,8 @@ ball:`<svg viewBox="0 0 100 100"><circle cx="50" cy="50" r="34" fill="#ff6e73"/>
 star:`<svg viewBox="0 0 100 100"><path d="m50 12 10 26 28 2-21 18 7 28-24-15-24 15 7-28-21-18 28-2z" fill="#ffd45c" stroke="#e4a83c" stroke-width="5"/></svg>`
 };
 Object.keys(emojiSVG).forEach(name=>{SVG[name]=animalSvg(name)});
+// Seahorse has no dedicated Unicode emoji, so give it a real vector illustration.
+SVG.seahorse=`<svg viewBox="0 0 100 100" role="img" aria-label="seahorse"><path d="M61 13c-16 0-25 10-25 24 0 9 4 15 10 20-9 3-15 10-15 19 0 10 8 17 19 17 12 0 22-7 22-18 0-7-4-12-10-15 8-6 13-15 13-26 0-12-5-21-14-21z" fill="#e6a34a" stroke="#9a6429" stroke-width="4"/><circle cx="59" cy="28" r="3" fill="#1d2733"/><path d="M49 54c8 5 15 5 22 0M53 70c7 4 13 4 19 0M42 80c-8 3-13 0-16-5" fill="none" stroke="#9a6429" stroke-width="4" stroke-linecap="round"/><path d="M31 31c-8-3-13 1-13 7 0 7 6 9 12 6" fill="none" stroke="#9a6429" stroke-width="4" stroke-linecap="round"/></svg>`;
 
 function shuffled(a){return [...a].sort(()=>Math.random()-.5)}
 function levelPairs(){return Math.min(12,4+Math.floor((level-1)*2))}

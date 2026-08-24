@@ -11,3 +11,6 @@
 - index.html
 - style.css
 - memory-v7.js
+
+
+Fix: added the missing seahorse card artwork used by Level 3, preventing undefined cards.
