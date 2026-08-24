@@ -21,7 +21,7 @@ const segmentLengths=[]; let totalPath=0; for(let i=0;i<path.length-1;i++){const
 function pathPoint(distanceAlong){let remaining=Math.max(0,Math.min(distanceAlong,totalPath));for(let i=0;i<path.length-1;i++){const len=segmentLengths[i];if(remaining<=len){const a=path[i],b=path[i+1];const q=len?remaining/len:0;return{x:a.x+(b.x-a.x)*q,y:a.y+(b.y-a.y)*q}}remaining-=len}return path[path.length-1]}
 
 function drawImage(key,x,y,w,h,alpha=1){const im=imgCache[key];if(!im||!im.complete||im.naturalWidth===0)return;ctx.save();ctx.globalAlpha=alpha;try{ctx.drawImage(im,x-w/2,y-h/2,w,h)}catch(e){}ctx.restore()}
-function drawMap(){ctx.fillStyle='#2d7040';ctx.fillRect(0,0,W,H);const g=imgCache.ground;for(let y=0;y<H;y+=128)for(let x=0;x<W;x+=128)if(g.complete)ctx.drawImage(g,x,y,128,128);
+function drawMap(){ctx.fillStyle='#2d7040';ctx.fillRect(0,0,W,H);const g=imgCache.ground;for(let y=0;y<H;y+=128)for(let x=0;x<W;x+=128){if(g && g.complete && g.naturalWidth>0){try{ctx.drawImage(g,x,y,128,128)}catch(e){}}}
 // path shadow and path
 ctx.save();ctx.lineCap='round';ctx.lineJoin='round';ctx.strokeStyle='#6b4a31';ctx.lineWidth=92;ctx.beginPath();ctx.moveTo(path[0].x,path[0].y);for(let p of path.slice(1))ctx.lineTo(p.x,p.y);ctx.stroke();ctx.strokeStyle='#d8ad68';ctx.lineWidth=78;ctx.stroke();ctx.strokeStyle='#f3d98b';ctx.lineWidth=4;ctx.setLineDash([18,15]);ctx.stroke();ctx.restore();
 // decoration
@@ -50,7 +50,7 @@ for(const e of enemies){const size=e.boss?115:62;const enemyKey=imgCache['e'+e.k
 for(const s of shots){ctx.fillStyle=s.type==='mage'?'#83c8ff':s.type==='cannon'?'#ff9d59':'#ffe57c';ctx.beginPath();ctx.arc(s.x,s.y,s.type==='cannon'?7:5,0,Math.PI*2);ctx.fill()}
 for(const f of fx){ctx.save();ctx.globalAlpha=1-f.t/350;ctx.strokeStyle='#fff2a8';ctx.lineWidth=4;ctx.beginPath();ctx.arc(f.x,f.y,10+f.t*.08,0,Math.PI*2);ctx.stroke();ctx.restore()}
 }
-let last=performance.now();function loop(now){const dt=Math.min(40,now-last);last=now;update(dt,now);draw(now);requestAnimationFrame(loop)}requestAnimationFrame(loop);
+let last=performance.now();function loop(now){const dt=Math.min(40,now-last);last=now;try{update(dt,now);draw(now)}catch(err){console.warn('Defense render/update error suppressed:',err)}requestAnimationFrame(loop)}requestAnimationFrame(loop);
 function canvasPoint(ev){const r=canvas.getBoundingClientRect();return{x:(ev.clientX-r.left)*W/r.width,y:(ev.clientY-r.top)*H/r.height}}
 canvas.addEventListener('pointerdown',e=>{const p=canvasPoint(e);for(let i=towers.length-1;i>=0;i--){if(dist(p,towers[i])<48){selectedTower=towers[i];updatePanel();document.getElementById('panel').classList.remove('hidden');return}}let best=-1,bd=70;pads.forEach((q,i)=>{const d=dist(p,q);if(d<bd&&!towers.some(t=>t.pad===i)){bd=d;best=i}});if(best>=0){place(selected,best)}});
 document.querySelectorAll('.tower-btn').forEach(b=>b.addEventListener('click',()=>{document.querySelectorAll('.tower-btn').forEach(x=>x.classList.remove('selected'));b.classList.add('selected');selected=b.dataset.type;toast(`Selected ${towerCfg[selected].name}`);play('ui')}));
