@@ -1,2 +1,3 @@
-# Blocks v7
-Mobile touch fix. Uses one unified Pointer Events drag system with pointer capture and a forced horizontal piece tray. Replace index.html, style.css, and game.js in Games/blocks on the main branch.
+# IRWFLIX Blocks v21
+
+Mobile drag update: the floating block is now held about 140px above the fingertip, creating a deliberate invisible-force / magnetic separation so the player can see the board clearly. The board preview remains aligned to the lifted block and the finger may stay outside the board while moving it.
