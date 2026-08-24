@@ -1,13 +1,12 @@
-# IRWFLIX PLAY Dashboard v1
-Main dashboard reads the shared Firestore `leaderboard` collection and shows top scores for Defense, Blocks and Memory.
-It also shows each player's best submitted score per game and a simple total of those three best scores.
+# IRWFLIX PLAY Top-10 Leaderboard System v1
 
-# Memory Match v1
-Ready-to-play files are in `Games/memory/`:
-- index.html
-- style.css
-- memory.js
+Root `index.html` is Dashboard v5.
 
-The Memory game uses the supplied Firebase project and writes `game: "memory"` to the shared `leaderboard` collection.
-
-Deploy the dashboard at the main site root and keep game folders at `/Games/defense/`, `/Games/blocks/`, and `/Games/memory/`.
+Leaderboard rule:
+- Every completed game run is saved as its own Firestore `leaderboard` document.
+- Leaderboards sort by numeric `score` descending.
+- Only the top 10 entries are displayed.
+- No player deduplication: the same name may occupy multiple positions.
+- Old scores are not deleted when they fall below top 10; they simply stop appearing in the top-10 query/view.
+- Blocks and Memory included in this package.
+- Defense dashboard support reads existing `game: "defense"` score submissions. The Defense game itself must use the same submission schema (`game:"defense", name, score`) for its submissions to appear.

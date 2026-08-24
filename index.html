@@ -1,59 +1,73 @@
 <!doctype html>
 <html lang="en">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>IRWFLIX PLAY</title>
 <style>
 :root{--bg:#070d16;--panel:#101a28;--line:#24344a;--text:#f6f8fb;--muted:#91a0b5;--gold:#ffd86b;--green:#72e6a0}
-*{box-sizing:border-box}body{margin:0;background:radial-gradient(circle at 50% -10%,#213b58,#070d16 48%);color:var(--text);font-family:system-ui,-apple-system,Segoe UI,sans-serif;padding:18px}
-.app{width:min(1120px,100%);margin:auto}header{display:flex;align-items:center;gap:12px;margin-bottom:18px}.logo{font-size:27px;font-weight:1000}.version{margin-left:auto;color:#66768c;font-size:9px;font-weight:900;letter-spacing:1px}
-.hero{background:linear-gradient(145deg,#15263b,#0d1725);border:1px solid var(--line);border-radius:24px;padding:24px;box-shadow:0 22px 70px #0008;margin-bottom:14px}.hero h1{margin:0;font-size:30px}.hero p{color:var(--muted);margin:7px 0 0}.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}.card{background:rgba(16,26,40,.9);border:1px solid var(--line);border-radius:18px;padding:18px;box-shadow:0 12px 35px #0004}.gamecard{min-height:150px}.gamehead{display:flex;justify-content:space-between;align-items:center}.gameicon{font-size:28px}.gamecard h2{margin:4px 0;font-size:20px}.score{font-size:34px;font-weight:1000;margin-top:16px}.label{color:var(--muted);font-size:10px;font-weight:900;letter-spacing:1px}.rank{color:var(--gold);font-size:12px;font-weight:900;margin-top:4px}.play{display:block;text-align:center;text-decoration:none;background:var(--green);color:#06120b;font-weight:1000;border-radius:11px;padding:11px;margin-top:14px}.overall{margin-top:14px}.overall .big{font-size:38px;font-weight:1000}.leader{margin-top:14px}.leader h2{margin:0 0 12px}.rows{display:grid;gap:5px}.row{display:grid;grid-template-columns:38px 1fr repeat(3,90px);gap:8px;align-items:center;padding:10px 8px;border-bottom:1px solid #1d2b3d;color:#d6deea}.row.head{color:var(--muted);font-size:9px;font-weight:900;letter-spacing:1px}.right{text-align:right}.status{color:var(--muted);font-size:12px}@media(max-width:760px){body{padding:9px}.grid{grid-template-columns:1fr}.row{grid-template-columns:30px 1fr 70px}.row .hide-mobile{display:none}.hero{padding:18px}}
+*{box-sizing:border-box}body{margin:0;background:radial-gradient(circle at 50% -10%,#213b58,#070d16 48%);color:var(--text);font-family:system-ui,-apple-system,Segoe UI,sans-serif;padding:16px}
+.app{width:min(1100px,100%);margin:auto}header{display:flex;align-items:center;gap:12px;margin-bottom:15px}.logo{font-size:27px;font-weight:1000}.ver{margin-left:auto;color:#64758b;font-size:9px;font-weight:900;letter-spacing:1px}
+.hero{background:linear-gradient(145deg,#15263b,#0d1725);border:1px solid var(--line);border-radius:22px;padding:20px;margin-bottom:12px;box-shadow:0 20px 65px #0008}.hero h1{margin:0;font-size:28px}.hero p{margin:5px 0;color:var(--muted)}.total{margin-top:14px}.total small{color:var(--muted);font-weight:900;font-size:9px;letter-spacing:1px}.total b{display:block;font-size:36px;margin-top:2px}
+.games{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}.game{background:#101a28;border:1px solid var(--line);border-radius:17px;padding:14px}.game h2{margin:0 0 10px;font-size:17px}.topscore{font-size:27px;font-weight:1000;color:var(--gold)}.game .play{display:block;text-align:center;text-decoration:none;background:var(--green);color:#06120b;font-weight:1000;border-radius:10px;padding:9px;margin-top:10px}
+.lb{margin-top:12px;background:#101a28;border:1px solid var(--line);border-radius:17px;padding:14px}.lb h2{margin:0 0 8px;font-size:18px}.tabs{display:flex;gap:7px;margin-bottom:10px}.tabs button{border:1px solid #30425a;background:#18263a;color:#d8e1ed;border-radius:9px;padding:8px 12px;font-weight:900;cursor:pointer}.tabs button.active{background:#72e6a0;color:#07120c;border-color:#72e6a0}.rows{display:grid}.row{display:grid;grid-template-columns:38px 1fr 110px;gap:8px;padding:9px 5px;border-bottom:1px solid #1d2a3c;align-items:center}.row.head{color:var(--muted);font-size:9px;font-weight:900;letter-spacing:1px}.right{text-align:right}.note{color:var(--muted);font-size:11px;margin-top:8px}
+@media(max-width:720px){body{padding:8px}.games{grid-template-columns:1fr}.tabs{overflow:auto}.tabs button{white-space:nowrap}.row{grid-template-columns:32px 1fr 85px}}
 </style>
 </head>
 <body>
 <div class="app">
-<header><div class="logo">IRWFLIX PLAY</div><div class="version">DASHBOARD v4</div></header>
-<section class="hero">
-<h1 id="welcome">Welcome to IRWFLIX PLAY</h1>
-<p>Your best scores across every game.</p>
-<div class="overall"><span class="label">YOUR TOTAL BEST SCORE</span><div class="big" id="total">—</div></div>
+<header><div class="logo">IRWFLIX PLAY</div><div class="ver">DASHBOARD v5</div></header>
+<section class="hero"><h1 id="welcome">Welcome to IRWFLIX PLAY 👋</h1><p>Every completed run is a score entry. Top scores are ranked independently for each game.</p><div class="total"><small>YOUR BEST SCORES COMBINED</small><b id="total">—</b></div></section>
+<section class="games">
+<article class="game"><h2>🏰 Defense</h2><div class="topscore" id="defTop">—</div><div class="note" id="defName">Loading…</div><a class="play" href="./defense/">PLAY</a></article>
+<article class="game"><h2>🧩 Blocks</h2><div class="topscore" id="blocksTop">—</div><div class="note" id="blocksName">Loading…</div><a class="play" href="./blocks/">PLAY</a></article>
+<article class="game"><h2>🧠 Memory</h2><div class="topscore" id="memoryTop">—</div><div class="note" id="memoryName">Loading…</div><a class="play" href="./memory/">PLAY</a></article>
 </section>
-<section class="grid">
-<article class="card gamecard"><div class="gamehead"><div class="gameicon">🏰</div><span class="label">DEFENSE</span></div><h2>IRWFLIX Defense</h2><div class="score" id="defScore">—</div><div class="label">TOP SCORE</div><div class="rank" id="defRank"></div><a class="play" href="./defense/">PLAY</a></article>
-<article class="card gamecard"><div class="gamehead"><div class="gameicon">🧩</div><span class="label">BLOCKS</span></div><h2>Blocks</h2><div class="score" id="blocksScore">—</div><div class="label">TOP SCORE</div><div class="rank" id="blocksRank"></div><a class="play" href="./blocks/">PLAY</a></article>
-<article class="card gamecard"><div class="gamehead"><div class="gameicon">🧠</div><span class="label">MEMORY</span></div><h2>Memory Match</h2><div class="score" id="memoryScore">—</div><div class="label">TOP SCORE</div><div class="rank" id="memoryRank"></div><a class="play" href="./memory/">PLAY</a></article>
-</section>
-<section class="card leader">
-<h2>🏆 Global Scores</h2>
-<div class="status" id="status">Loading leaderboard…</div>
+<section class="lb">
+<h2>🏆 Top 10</h2>
+<div class="tabs">
+<button class="active" data-game="blocks">🧩 Blocks</button>
+<button data-game="defense">🏰 Defense</button>
+<button data-game="memory">🧠 Memory</button>
+</div>
+<div id="status" class="note">Loading scores…</div>
 <div class="rows" id="rows"></div>
+<div class="note">Every submission is an independent score entry. The same player can appear multiple times.</div>
 </section>
 </div>
 <script type="module">
 import{initializeApp}from"https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
 import{getFirestore,collection,getDocs,query,limit}from"https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 const firebaseConfig={apiKey:"AIzaSyC2jNNzAk5ghmVE6KLOeGPtd3CCTzpw3qo",authDomain:"leaderboard-90b9b.firebaseapp.com",projectId:"leaderboard-90b9b",storageBucket:"leaderboard-90b9b.firebasestorage.app",messagingSenderId:"891059392275",appId:"1:891059392275:web:757305992c2d83d39214e6",measurementId:"G-RXNVYRFXC5"};
-const db=getFirestore(initializeApp(firebaseConfig));const esc=s=>String(s??"").replace(/[<>&"]/g,"");
-const names=[localStorage.memoryPlayer,localStorage.blocksPlayer,localStorage.defensePlayer].filter(Boolean);
-if(names[0])document.querySelector("#welcome").textContent="Welcome back, "+names[0]+" 👋";
-const gameNames={defense:"Defense",blocks:"Blocks",memory:"Memory"};
-async function load(){try{
- const snap=await getDocs(query(collection(db,"leaderboard"),limit(500)));const by={defense:[],blocks:[],memory:[]};
- snap.forEach(d=>{const x=d.data();if(by[x.game])by[x.game].push(x)});
- let total=0;
- for(const g of Object.keys(by)){
-   by[g].sort((a,b)=>Number(b.score||0)-Number(a.score||0));const top=by[g][0];const score=Number(top?.score||0);total+=score;
-   document.querySelector("#"+g+"Score").textContent=score?score.toLocaleString():"—";
-   document.querySelector("#"+g+"Rank").textContent=top?`#1 ${esc(top.name||"Player")}`:"No scores yet";
- }
- document.querySelector("#total").textContent=total.toLocaleString();
- const players={};for(const g of Object.keys(by)){by[g].forEach(x=>{const n=String(x.name||"Player");players[n]??={defense:0,blocks:0,memory:0};players[n][g]=Math.max(players[n][g],Number(x.score||0))})}
- const ranked=Object.entries(players).map(([name,s])=>({name,...s,total:s.defense+s.blocks+s.memory})).sort((a,b)=>b.total-a.total).slice(0,10);
- const rows=document.querySelector("#rows");rows.innerHTML='<div class="row head"><span>#</span><span>PLAYER</span><span class="right">DEFENSE</span><span class="right">BLOCKS</span><span class="right">MEMORY</span></div>';
- ranked.forEach((p,i)=>rows.insertAdjacentHTML("beforeend",`<div class="row"><span>${i+1}</span><b>${esc(p.name)}</b><span class="right hide-mobile">${p.defense.toLocaleString()}</span><span class="right hide-mobile">${p.blocks.toLocaleString()}</span><span class="right hide-mobile">${p.memory.toLocaleString()}</span></div>`));
- document.querySelector("#status").textContent=ranked.length?"Best score per player, across games":"No scores yet — play a game and submit your score.";
-}catch(e){document.querySelector("#status").textContent="Leaderboard unavailable. Check Firestore rules/deployment.";console.error(e)}}
+const db=getFirestore(initializeApp(firebaseConfig));
+const esc=s=>String(s??"").replace(/[<>&"]/g,"");
+let scores={blocks:[],defense:[],memory:[]},current="blocks";
+async function load(){
+ try{
+  const snap=await getDocs(query(collection(db,"leaderboard"),limit(1000)));
+  snap.forEach(d=>{const x=d.data();if(scores[x.game])scores[x.game].push(x)});
+  for(const g of Object.keys(scores))scores[g].sort((a,b)=>Number(b.score||0)-Number(a.score||0));
+  for(const g of Object.keys(scores)){
+   const top=scores[g][0], el=document.getElementById(g+"Top"), nm=document.getElementById(g+"Name");
+   el.textContent=top?Number(top.score||0).toLocaleString():"—";
+   nm.textContent=top?`#1 ${esc(top.name||"Player")}`:"No scores yet";
+  }
+  const bestBy={};for(const g of Object.keys(scores))for(const x of scores[g]){
+    const n=String(x.name||"Player");bestBy[n]??={blocks:0,defense:0,memory:0};
+    bestBy[n][g]=Math.max(bestBy[n][g],Number(x.score||0));
+  }
+  const total=Object.values(bestBy).reduce((sum,p)=>sum+p.blocks+p.defense+p.memory,0);
+  const topPlayer=Object.entries(bestBy).map(([name,p])=>({name,total:p.blocks+p.defense+p.memory})).sort((a,b)=>b.total-a.total)[0];
+  document.getElementById("total").textContent=topPlayer?topPlayer.total.toLocaleString():"—";
+  render();
+ }catch(e){document.getElementById("status").textContent="Leaderboard unavailable.";console.error(e)}
+}
+function render(){
+ const arr=scores[current].slice(0,10), rows=document.getElementById("rows");
+ rows.innerHTML='<div class="row head"><span>#</span><span>PLAYER</span><span class="right">SCORE</span></div>';
+ arr.forEach((x,i)=>rows.insertAdjacentHTML("beforeend",`<div class="row"><span>${i+1}</span><b>${esc(x.name||"Player")}</b><span class="right">${Number(x.score||0).toLocaleString()}</span></div>`));
+ document.getElementById("status").textContent=arr.length?`${arr.length} score ${arr.length===1?"entry":"entries"} shown`:"No scores yet — be the first!";
+}
+document.querySelectorAll(".tabs button").forEach(b=>b.onclick=()=>{document.querySelectorAll(".tabs button").forEach(x=>x.classList.remove("active"));b.classList.add("active");current=b.dataset.game;render()});
 load();
 </script>
 </body></html>
