@@ -1,16 +1,20 @@
-# IRWFLIX PLAY — Memory Match v8
+IRWFLIX MEMORY v19 — LEADERBOARD FIX
 
-## Fixed
-- Incorrect card pairs now reliably flip back face-down.
-- The board stays locked until the incorrect-pair reset animation finishes.
-- Prevents a third card from being selected during the reset window.
-- Animal sets remain different by level.
-- No ES-module imports; loaded with a normal script tag.
+This version keeps the requested no-authentication design.
 
-## Files
-- index.html
-- style.css
-- memory-v7.js
+Important leaderboard fix:
+- Firestore REST requests now include the Firebase Web API key from the existing firebaseConfig.
+- No Firebase Authentication is used.
+- Firestore Security Rules remain the authority for read/write permission.
+- The score write and leaderboard read use the same project/database and API key.
 
+Why:
+The previous direct REST calls omitted the Web API key. Adding the key is required for the browser REST request path used here and removes that configuration-related 403 cause.
 
-Fix: added the missing seahorse card artwork used by Level 3, preventing undefined cards.
+If the deployed rules are:
+match /leaderboard/{document} {
+  allow read, write: if true;
+}
+then the game should be able to read and create leaderboard documents without user authentication.
+
+No changes were made to the timer, +3s/-1s time logic, score, sounds, or clean card assets.

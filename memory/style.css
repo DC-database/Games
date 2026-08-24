@@ -16,7 +16,7 @@ header{display:flex;align-items:center;justify-content:space-between;padding:8px
 .back{background:linear-gradient(145deg,#263c58,#142338);border:2px solid #405775;box-shadow:inset 0 0 0 2px #ffffff0b,0 8px 18px #0006}
 .back:before{content:"✦";font-size:36px;color:#86a1c3;opacity:.7;text-shadow:0 0 18px #6ea8ff55}
 .front{transform:rotateY(180deg);background:linear-gradient(145deg,#f7fbff,#dbe7f5);border:2px solid #ffffff;box-shadow:0 7px 20px #0006}
-.front svg{width:78%;height:78%;filter:drop-shadow(0 4px 5px #0002)}
+.face img{display:block;width:72%;height:72%;object-fit:contain;object-position:center;max-width:72%;max-height:72%;user-select:none;-webkit-user-drag:none}.front img{filter:drop-shadow(0 5px 6px #0002)}
 .card.matched .front{animation:match .55s ease both;box-shadow:0 0 0 3px var(--accent),0 0 32px #73e6a266}
 .card.bad{animation:shakeCard .32s ease}
 .controls{display:flex;gap:9px}.controls button{flex:1;min-height:50px;border:0;border-radius:14px;font-weight:1000;font-size:15px}.new{background:#b887ff;color:#100b1b}.end{background:#263a52;color:#fff}
@@ -30,3 +30,21 @@ header{display:flex;align-items:center;justify-content:space-between;padding:8px
 @keyframes floatUp{to{transform:translateY(-70px);opacity:0}}
 @keyframes confetti{to{transform:translate(var(--dx),var(--dy)) rotate(600deg);opacity:0}}
 @media(max-width:520px){body{padding:8px}.stats{gap:6px}.stat{padding:8px 4px}.stat b{font-size:21px}.top h1{font-size:24px}.board{gap:7px}.card{border-radius:14px}.face{border-radius:14px}.boost{font-size:12px;padding:7px}}
+
+/* Full-screen game-over / menu experience */
+.gameover-overlay{background:radial-gradient(circle at 50% 15%,#183f78 0,#07111f 55%,#02060c 100%);padding:18px;overflow:auto}
+.gameover-screen{width:min(620px,100%);min-height:min(760px,calc(100vh - 36px));display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:34px 22px;border:1px solid #365579;border-radius:28px;background:linear-gradient(160deg,rgba(17,34,56,.98),rgba(7,16,28,.98));box-shadow:0 30px 100px #000c}
+.gameover-badge{display:inline-flex;align-items:center;gap:6px;padding:8px 13px;border-radius:999px;background:#3a2b12;border:1px solid #8d6825;color:#ffd66e;font-weight:1000;font-size:13px;letter-spacing:.5px}
+.gameover-screen h2{font-size:clamp(42px,10vw,76px);line-height:.95;margin:22px 0 16px;font-weight:1000;letter-spacing:-2px;background:linear-gradient(90deg,#fff,#b98cff,#73d9ff);-webkit-background-clip:text;background-clip:text;color:transparent}
+.gameover-label{color:#8fa4bc;font-size:14px;font-weight:1000;letter-spacing:2px}
+.gameover-score{font-size:clamp(70px,18vw,120px);line-height:1;font-weight:1000;color:#fff;margin:6px 0 20px;text-shadow:0 10px 35px #0008}
+.gameover-stats{display:grid;grid-template-columns:repeat(3,1fr);width:min(430px,100%);gap:10px;margin-bottom:18px}
+.gameover-stats div{background:#14253a;border:1px solid #304864;border-radius:15px;padding:12px 8px}.gameover-stats b{display:block;font-size:25px}.gameover-stats span{display:block;color:#91a4ba;font-size:11px;font-weight:900;margin-top:2px}
+.gameover-screen p{color:#aebed0;font-weight:700;max-width:430px;line-height:1.5;margin:0 0 18px}.gameover-actions{width:min(430px,100%);display:grid;gap:10px}.gameover-actions button,.menu-screen button{min-height:56px;border:0;border-radius:15px;font-size:16px;font-weight:1000;cursor:pointer}.menu-screen .menu-icon{font-size:68px}.menu-screen h2{font-size:48px;margin:16px 0 10px}.menu-screen p{font-size:16px}
+@media(max-width:520px){.gameover-overlay{padding:10px}.gameover-screen{min-height:calc(100vh - 20px);border-radius:22px;padding:26px 16px}.gameover-screen h2{font-size:52px}.gameover-score{font-size:84px}.gameover-stats{gap:7px}.gameover-stats div{padding:10px 5px}}
+
+.header-actions{display:flex;align-items:center;gap:10px}.sound-toggle{width:42px;height:38px;border:1px solid #29435e;border-radius:12px;background:#14253a;color:#fff;font-size:20px;cursor:pointer;display:grid;place-items:center}.sound-toggle:active{transform:scale(.96)}
+
+.float.positive{color:#73e6a2}.float.negative{color:#ff7d86}
+.time-danger{color:#ff7d86!important;animation:timePulse .7s ease-in-out infinite alternate}
+@keyframes timePulse{to{transform:scale(1.04);text-shadow:0 0 16px #ff526655}}

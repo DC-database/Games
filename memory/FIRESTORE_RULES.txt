@@ -1,0 +1,11 @@
+Recommended temporary development rules for the leaderboard only:
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /leaderboard/{document} {
+      allow read, write: if true;
+    }
+  }
+}
+
+IMPORTANT: These rules intentionally make the leaderboard publicly readable/writable. Do not use them for private production data.
