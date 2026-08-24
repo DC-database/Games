@@ -308,3 +308,48 @@ button{border:0;border-radius:11px;padding:12px 16px;font-weight:1000;cursor:poi
   background:transparent!important;
   box-shadow:none!important;
 }
+
+/* v16 - line clear and score feedback */
+.cell.clear-pop{
+  animation:blockClear .24s ease-out forwards;
+  z-index:4;
+}
+@keyframes blockClear{
+  0%{transform:scale(1);filter:brightness(1)}
+  45%{transform:scale(1.12);filter:brightness(1.9)}
+  100%{transform:scale(.18);opacity:0;filter:brightness(2)}
+}
+.clear-spark{
+  position:fixed;
+  width:7px;height:7px;border-radius:50%;
+  pointer-events:none;z-index:100000;
+  background:currentColor;
+  animation:sparkFly .48s ease-out forwards;
+}
+@keyframes sparkFly{
+  0%{transform:translate(0,0) scale(1);opacity:1}
+  100%{transform:translate(var(--dx),var(--dy)) scale(.15);opacity:0}
+}
+.score-pop{
+  position:fixed;z-index:100001;pointer-events:none;
+  font-weight:1000;font-size:24px;letter-spacing:.5px;
+  color:#fff;text-shadow:0 2px 8px #0008;
+  animation:scoreFloat .75s cubic-bezier(.2,.7,.2,1) forwards;
+}
+@keyframes scoreFloat{
+  0%{transform:translate(-50%,0) scale(.7);opacity:0}
+  18%{transform:translate(-50%,-6px) scale(1.15);opacity:1}
+  100%{transform:translate(-50%,-62px) scale(.95);opacity:0}
+}
+.combo-pop{
+  animation:comboPop .42s cubic-bezier(.2,1.5,.3,1) both;
+}
+@keyframes comboPop{
+  0%{transform:scale(.7);opacity:.4}
+  60%{transform:scale(1.16);opacity:1}
+  100%{transform:scale(1);opacity:1}
+}
+@media(max-width:800px){
+  .score-pop{font-size:22px}
+  .clear-spark{width:6px;height:6px}
+}

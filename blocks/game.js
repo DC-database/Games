@@ -178,6 +178,50 @@ function endDrag(e){
   if(!possible)gameOver();
  }
 }
+
+function showScorePop(points, combo, cells){
+  const board=$("board");
+  const r=board.getBoundingClientRect();
+  const centerX=r.left+r.width/2;
+  const centerY=r.top+r.height*.42;
+  const el=document.createElement("div");
+  el.className="score-pop";
+  el.textContent="+"+points+(combo>1?"  ×"+combo:"");
+  el.style.left=centerX+"px";
+  el.style.top=centerY+"px";
+  document.body.appendChild(el);
+  setTimeout(()=>el.remove(),800);
+
+  // small burst from the cleared cells
+  const targets=cells.slice(0,28);
+  targets.forEach(([x,y],i)=>{
+    const c=board.querySelector(`[data-x="${x}"][data-y="${y}"]`);
+    if(!c)return;
+    const cr=c.getBoundingClientRect();
+    for(let k=0;k<2;k++){
+      const s=document.createElement("i");
+      s.className="clear-spark";
+      s.style.left=(cr.left+cr.width/2)+"px";
+      s.style.top=(cr.top+cr.height/2)+"px";
+      s.style.color=getComputedStyle(c).backgroundColor||"#fff";
+      const a=(Math.PI*2*(i*2+k)/Math.max(1,targets.length*2));
+      const d=28+Math.random()*42;
+      s.style.setProperty("--dx",Math.cos(a)*d+"px");
+      s.style.setProperty("--dy",Math.sin(a)*d+"px");
+      document.body.appendChild(s);
+      setTimeout(()=>s.remove(),520);
+    }
+  });
+}
+function animateClearCells(cells, done){
+  const board=$("board");
+  cells.forEach(([x,y])=>{
+    const c=board.querySelector(`[data-x="${x}"][data-y="${y}"]`);
+    if(c)c.classList.add("clear-pop");
+  });
+  setTimeout(done,250);
+}
+
 function clearLines(){
  let rows=[],cols=[];
  for(let r=0;r<N;r++)if(board[r].every(Boolean))rows.push(r);
