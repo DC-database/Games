@@ -76,13 +76,35 @@ refreshSelection();
 upgradeBtn.onclick=()=>{if(!selectedTower)return;let t=selectedTower;if(gold>=t.upgradeCost){gold-=t.upgradeCost;t.level++;t.damage=Math.round(t.damage*1.35);t.range+=10;t.rate=Math.max(180,Math.round(t.rate*.92));t.upgradeCost=Math.round(t.upgradeCost*1.45);setMessage("Tower upgraded!");updateUI();refreshSelection()}};
 sellBtn.onclick=()=>{if(!selectedTower)return;gold+=Math.floor(selectedTower.invested*.65);towers=towers.filter(t=>t!==selectedTower);selectedTower=null;setMessage("Tower sold.");updateUI();refreshSelection()};
 
-canvas.addEventListener("click",e=>{
+let canvasPointerStart=null;
+canvas.addEventListener("pointerdown",e=>{
+ if(e.pointerType==="touch"){
+   e.preventDefault();
+   try{canvas.setPointerCapture(e.pointerId)}catch(_){}
+ }
+ canvasPointerStart={x:e.clientX,y:e.clientY};
+},{passive:false});
+
+canvas.addEventListener("pointerup",e=>{
+ if(canvasPointerStart){
+   const moved=Math.hypot(e.clientX-canvasPointerStart.x,e.clientY-canvasPointerStart.y);
+   canvasPointerStart=null;
+   if(moved>12)return;
+ }
+ e.preventDefault();
  const r=canvas.getBoundingClientRect(),sx=W/r.width,sy=H/r.height,x=(e.clientX-r.left)*sx,y=(e.clientY-r.top)*sy;
- let hit=towers.find(t=>Math.hypot(t.x-x,t.y-y)<27);if(hit){selectedTower=hit;refreshSelection();return}
- let p=pads.find(p=>Math.hypot(p.x-x,p.y-y)<34);if(!p||towers.some(t=>Math.hypot(t.x-p.x,t.y-p.y)<1))return;
- let d=types[selectedType];if(gold<d.cost){setMessage("Not enough gold.");return}
- gold-=d.cost;let t={x:p.x,y:p.y,type:selectedType,level:1,damage:d.damage,range:d.range,rate:d.rate,cool:0,upgradeCost:100,invested:d.cost};towers.push(t);selectedTower=t;updateUI();refreshSelection();
-});
+ let hit=towers.find(t=>Math.hypot(t.x-x,t.y-y)<27);
+ if(hit){selectedTower=hit;refreshSelection();return}
+ let p=pads.find(p=>Math.hypot(p.x-x,p.y-y)<34);
+ if(!p||towers.some(t=>Math.hypot(t.x-p.x,t.y-p.y)<1))return;
+ let d=types[selectedType];
+ if(gold<d.cost){setMessage("Not enough gold.");return}
+ gold-=d.cost;
+ let t={x:p.x,y:p.y,type:selectedType,level:1,damage:d.damage,range:d.range,rate:d.rate,cool:0,upgradeCost:100,invested:d.cost};
+ towers.push(t);selectedTower=t;updateUI();refreshSelection();
+},{passive:false});
+
+canvas.addEventListener("pointercancel",()=>{canvasPointerStart=null},{passive:true});
 
 startBtn.onclick=()=>{
   if(gameOver||countdownActive)return;
@@ -275,3 +297,5 @@ nameStartBtn.onclick=()=>{
 };
 nameInput.addEventListener("keydown",e=>{if(e.key==="Enter")nameStartBtn.click()});
 renderScores();updateUI();requestAnimationFrame(loop);
+// Mobile-friendly controls: normal click remains the primary activation,
+// while touch-action: manipulation prevents the browser from treating taps as scrolling/zoom gestures.
