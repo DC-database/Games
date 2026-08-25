@@ -4,99 +4,65 @@
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>IRWFLIX PLAY</title>
 <style>
-:root{--bg:#070d16;--panel:#101a28;--line:#24344a;--text:#f6f8fb;--muted:#91a0b5;--gold:#ffd86b;--green:#72e6a0}
-*{box-sizing:border-box}body{margin:0;background:radial-gradient(circle at 50% -10%,#213b58,#070d16 48%);color:var(--text);font-family:system-ui,-apple-system,Segoe UI,sans-serif;padding:16px}
-.app{width:min(1100px,100%);margin:auto}header{display:flex;align-items:center;gap:12px;margin-bottom:15px}.logo{font-size:27px;font-weight:1000}.ver{margin-left:auto;color:#64758b;font-size:9px;font-weight:900;letter-spacing:1px}
-.hero{background:linear-gradient(145deg,#15263b,#0d1725);border:1px solid var(--line);border-radius:22px;padding:20px;margin-bottom:12px;box-shadow:0 20px 65px #0008}.hero h1{margin:0;font-size:28px}.hero p{margin:5px 0;color:var(--muted)}.total{margin-top:14px}.total small{color:var(--muted);font-weight:900;font-size:9px;letter-spacing:1px}.total b{display:block;font-size:36px;margin-top:2px}
-.games{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}.game{background:#101a28;border:1px solid var(--line);border-radius:17px;padding:14px}.game h2{margin:0 0 10px;font-size:17px}.topscore{font-size:27px;font-weight:1000;color:var(--gold)}.game .play{display:block;text-align:center;text-decoration:none;background:var(--green);color:#06120b;font-weight:1000;border-radius:10px;padding:9px;margin-top:10px}
-.lb{margin-top:12px;background:#101a28;border:1px solid var(--line);border-radius:17px;padding:14px}.lb h2{margin:0 0 8px;font-size:18px}.tabs{display:flex;gap:7px;margin-bottom:10px}.tabs button{border:1px solid #30425a;background:#18263a;color:#d8e1ed;border-radius:9px;padding:8px 12px;font-weight:900;cursor:pointer}.tabs button.active{background:#72e6a0;color:#07120c;border-color:#72e6a0}.rows{display:grid}.row{display:grid;grid-template-columns:38px 1fr 110px;gap:8px;padding:9px 5px;border-bottom:1px solid #1d2a3c;align-items:center}.row.head{color:var(--muted);font-size:9px;font-weight:900;letter-spacing:1px}.right{text-align:right}.note{color:var(--muted);font-size:11px;margin-top:8px}
-@media(max-width:720px){body{padding:8px}.games{grid-template-columns:1fr}.tabs{overflow:auto}.tabs button{white-space:nowrap}.row{grid-template-columns:32px 1fr 85px}}
+:root{--bg:#070d16;--panel:#101a28;--line:#24344a;--text:#f6f8fb;--muted:#91a0b5;--gold:#ffd86b;--green:#72e6a0;--red:#ff7c7c}
+*{box-sizing:border-box}body{margin:0;background:radial-gradient(circle at 50% -10%,#213b58,#070d16 48%);color:var(--text);font-family:system-ui,-apple-system,Segoe UI,sans-serif;padding:16px}.app{width:min(1100px,100%);margin:auto}header{display:flex;align-items:center;gap:12px;margin-bottom:15px}.logo{font-size:27px;font-weight:1000}.ver{margin-left:auto;color:#64758b;font-size:9px;font-weight:900;letter-spacing:1px}.account{display:flex;align-items:center;gap:8px;margin-left:auto}.account small{color:var(--muted);font-weight:800}.account button,.auth button{border:0;border-radius:10px;padding:9px 13px;font-weight:900;cursor:pointer}.logout{background:#25344a;color:#fff}
+.hero{background:linear-gradient(145deg,#15263b,#0d1725);border:1px solid var(--line);border-radius:22px;padding:20px;margin-bottom:12px;box-shadow:0 20px 65px #0008}.hero h1{margin:0;font-size:28px}.hero p{margin:5px 0;color:var(--muted)}.total{margin-top:14px}.total small{color:var(--muted);font-weight:900;font-size:9px;letter-spacing:1px}.total b{display:block;font-size:36px;margin-top:2px}.games{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}.game{background:#101a28;border:1px solid var(--line);border-radius:17px;padding:14px}.game h2{margin:0 0 10px;font-size:17px}.topscore{font-size:27px;font-weight:1000;color:var(--gold)}.game .play{display:block;text-align:center;text-decoration:none;background:var(--green);color:#06120b;font-weight:1000;border-radius:10px;padding:9px;margin-top:10px}.personal{margin-top:7px;color:#b9c7d9;font-size:11px}.lb{margin-top:12px;background:#101a28;border:1px solid var(--line);border-radius:17px;padding:14px}.lb h2{margin:0 0 8px;font-size:18px}.tabs{display:flex;gap:7px;margin-bottom:10px}.tabs button{border:1px solid #30425a;background:#18263a;color:#d8e1ed;border-radius:9px;padding:8px 12px;font-weight:900;cursor:pointer}.tabs button.active{background:#72e6a0;color:#07120c;border-color:#72e6a0}.rows{display:grid}.row{display:grid;grid-template-columns:38px 1fr 110px;gap:8px;padding:9px 5px;border-bottom:1px solid #1d2a3c;align-items:center}.row.head{color:var(--muted);font-size:9px;font-weight:900;letter-spacing:1px}.right{text-align:right}.note{color:var(--muted);font-size:11px;margin-top:8px}
+.auth{position:fixed;inset:0;background:#02060ccc;backdrop-filter:blur(10px);display:grid;place-items:center;padding:18px;z-index:20}.auth.hidden{display:none}.auth-card{width:min(460px,100%);background:#101a28;border:1px solid #30425a;border-radius:22px;padding:22px;box-shadow:0 30px 100px #000b}.auth-card h1{margin:0 0 5px;font-size:25px}.auth-card>p{color:var(--muted);margin:0 0 18px;font-size:13px;line-height:1.45}.field{margin:12px 0}.field label{display:block;font-size:10px;font-weight:900;color:#9eacc0;letter-spacing:1px;margin-bottom:6px}.field input{width:100%;padding:12px;border-radius:10px;border:1px solid #34465f;background:#0b1320;color:#fff;outline:none;font-size:15px}.field input:focus{border-color:#72e6a0}.hint{font-size:10px;color:#74859b;margin-top:5px}.auth-primary{width:100%;background:var(--green);color:#07120c;margin-top:8px}.auth-switch{width:100%;background:transparent;color:#b9c7d9;margin-top:7px}.auth-status{min-height:20px;color:var(--red);font-size:12px;margin-top:10px;font-weight:800}.auth-status.ok{color:var(--green)}
+@media(max-width:720px){body{padding:8px}.games{grid-template-columns:1fr}.tabs{overflow:auto}.tabs button{white-space:nowrap}.row{grid-template-columns:32px 1fr 85px}.account small{display:none}}
 </style>
 </head>
 <body>
-<div class="app">
-<header><div class="logo">IRWFLIX PLAY</div><div class="ver">DASHBOARD v7</div></header>
-<section class="hero"><h1 id="welcome">Welcome to IRWFLIX PLAY 👋</h1><p>Every completed run is a score entry. Top scores are ranked independently for each game.</p><div class="total"><small>YOUR BEST SCORES COMBINED</small><b id="total">—</b></div></section>
+<div class="app" id="app" hidden>
+<header><div class="logo">IRWFLIX PLAY</div><div class="account"><small id="accountLabel"></small><button class="logout" id="logout">LOG OUT</button></div><div class="ver">PLAYER DASHBOARD v8</div></header>
+<section class="hero"><h1 id="welcome">Welcome!</h1><p>Your Game Name is your unique public identity. Your ID Name is only for login.</p><div class="total"><small>YOUR BEST SCORES COMBINED</small><b id="total">0</b></div></section>
 <section class="games">
-<article class="game"><h2>🏰 Defense</h2><div class="topscore" id="defTop">—</div><div class="note" id="defName">Loading…</div><a class="play" href="./defense/">PLAY</a></article>
-<article class="game"><h2>🧩 Blocks</h2><div class="topscore" id="blocksTop">—</div><div class="note" id="blocksName">Loading…</div><a class="play" href="./blocks/">PLAY</a></article>
-<article class="game"><h2>🧠 Memory</h2><div class="topscore" id="memoryTop">—</div><div class="note" id="memoryName">Loading…</div><a class="play" href="./memory/">PLAY</a></article>
+<article class="game"><h2>🏰 Defense</h2><div class="topscore" id="defTop">—</div><div class="note" id="defName">Loading…</div><div class="personal" id="defPersonal">Your best: —</div><a class="play" href="./defense/">PLAY</a></article>
+<article class="game"><h2>🧩 Blocks</h2><div class="topscore" id="blocksTop">—</div><div class="note" id="blocksName">Loading…</div><div class="personal" id="blocksPersonal">Your best: —</div><a class="play" href="./blocks/">PLAY</a></article>
+<article class="game"><h2>🧠 Memory</h2><div class="topscore" id="memoryTop">—</div><div class="note" id="memoryName">Loading…</div><div class="personal" id="memoryPersonal">Your best: —</div><a class="play" href="./memory/">PLAY</a></article>
 </section>
-<section class="lb">
-<h2>🏆 Top 10</h2>
-<div class="tabs">
-<button class="active" data-game="blocks">🧩 Blocks</button>
-<button data-game="defense">🏰 Defense</button>
-<button data-game="memory">🧠 Memory</button>
+<section class="lb"><h2>🏆 Global Top 10</h2><div class="tabs"><button class="active" data-game="blocks">🧩 Blocks</button><button data-game="defense">🏰 Defense</button><button data-game="memory">🧠 Memory</button></div><div id="status" class="note">Loading scores…</div><div class="rows" id="rows"></div></section>
 </div>
-<div id="status" class="note">Loading scores…</div>
-<div class="rows" id="rows"></div>
-<div class="note">Every submission is an independent score entry. The same player can appear multiple times.</div>
-</section>
-</div>
-<script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-app.js";
-import { getFirestore, collection, getDocs, query, limit } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js";
-
-const firebaseConfig={
-  apiKey:"AIzaSyC2jNNzAkghmVE6KLOeGPtd3CCTzpw3qo",
-  authDomain:"leaderboard-90b9b.firebaseapp.com",
-  projectId:"leaderboard-90b9b",
-  storageBucket:"leaderboard-90b9b.firebasestorage.app",
-  messagingSenderId:"891059392275",
-  appId:"1:891059392275:web:757305992c2d83d39214e6",
-  measurementId:"G-RXNVYRFXC5"
-};
-const db=getFirestore(initializeApp(firebaseConfig));
-const esc=s=>String(s??"").replace(/[<>&"]/g,"");
-let scores={blocks:[],defense:[],memory:[]},current="blocks";
-
-async function load(){
-  const status=document.getElementById("status");
-  status.textContent="Loading scores…";
-  try{
-    const snap=await Promise.race([
-      getDocs(query(collection(db,"leaderboard"),limit(1000))),
-      new Promise((_,reject)=>setTimeout(()=>reject(new Error("Leaderboard request timed out")),8000))
-    ]);
-    snap.forEach(d=>{
-      const x=d.data();
-      if(scores[x.game]) scores[x.game].push(x);
-    });
-    for(const g of Object.keys(scores)) scores[g].sort((a,b)=>Number(b.score||0)-Number(a.score||0));
-
-    for(const g of Object.keys(scores)){
-      const top=scores[g][0];
-      document.getElementById(g+"Top").textContent=top?Number(top.score||0).toLocaleString():"—";
-      document.getElementById(g+"Name").textContent=top?`#1 ${esc(top.name||"Player")}`:"No scores yet";
-    }
-
-    const bestBy={};
-    for(const g of Object.keys(scores)) for(const x of scores[g]){
-      const n=String(x.name||"Player");
-      bestBy[n]??={blocks:0,defense:0,memory:0};
-      bestBy[n][g]=Math.max(bestBy[n][g],Number(x.score||0));
-    }
-    const best=Object.values(bestBy).map(p=>p.blocks+p.defense+p.memory).sort((a,b)=>b-a)[0]||0;
-    document.getElementById("total").textContent=best.toLocaleString();
-    render();
-  }catch(e){
-    console.error(e);
-    status.textContent="Leaderboard unavailable — check Firebase Firestore rules.";
-    document.getElementById("rows").innerHTML='<div class="row"><span>!</span><span>Could not load leaderboard</span><span class="right">—</span></div>';
-  }
+<div class="auth" id="auth"><div class="auth-card"><h1 id="authTitle">Create your player</h1><p id="authIntro">Choose a unique ID Name for your account and a separate unique Game Name for the leaderboards.</p><div class="field"><label>ID NAME — ACCOUNT</label><input id="idName" maxlength="10" autocomplete="username" placeholder="Up to 10 letters/numbers"><div class="hint">10 characters maximum • letters and numbers only • unique</div></div><div class="field" id="gameField"><label>GAME NAME — PUBLIC</label><input id="gameName" maxlength="6" autocomplete="nickname" placeholder="Up to 6 letters/numbers"><div class="hint">6 characters maximum • letters and numbers only • unique</div></div><div class="auth-status" id="authStatus"></div><button class="auth-primary" id="authSubmit">REGISTER</button><button class="auth-switch" id="authSwitch">Already registered? Log in</button></div></div>
+<script src="./firebase-rtdb.js"></script>
+<script>
+const $=id=>document.getElementById(id), esc=s=>String(s??"").replace(/[<>&"]/g,"");
+let mode="register",player=null,scores={blocks:[],defense:[],memory:[]},current="blocks";
+const session=getSession();
+function clean(v,max){return String(v||"").trim().slice(0,max)}
+function validName(v,max){return new RegExp(`^[A-Za-z0-9]{1,${max}}$`).test(v)}
+function key(v){return String(v).trim().toLowerCase()}
+function setMode(m){mode=m;$('authTitle').textContent=m==='register'?'Create your player':'Welcome back';$('authIntro').textContent=m==='register'?'Choose a unique ID Name for your account and a separate unique Game Name for the leaderboards.':'Enter the same ID Name you registered before. Your Game Name is your public leaderboard name.';$('gameField').style.display=m==='register'?'block':'none';$('authSubmit').textContent=m==='register'?'REGISTER':'LOGIN';$('authSwitch').textContent=m==='register'?'Already registered? Log in':'New player? Register';$('authStatus').textContent="";$('authStatus').className='auth-status'}
+async function register(){
+ const id=clean($('idName').value,10), game=clean($('gameName').value,6), ik=key(id), gk=key(game);
+ if(!validName(id,10)) throw new Error('ID Name must be 1–10 letters or numbers.');
+ if(!validName(game,6)) throw new Error('Game Name must be 1–6 letters or numbers.');
+ $('authStatus').textContent='Checking availability…';
+ const [ir,gr]=await Promise.all([rtdbGet(`players/${encodeURIComponent(ik)}`),rtdbGet(`gameNames/${encodeURIComponent(gk)}`)]);
+ if(!ir.ok||!gr.ok) throw new Error('Could not check name availability.');
+ if(await ir.json()) throw new Error('That ID Name is already registered. Please choose another.');
+ if(await gr.json()) throw new Error('That Game Name is already taken. Please choose another.');
+ $('authStatus').textContent='Registering…';
+ const data={idName:id,gameName:game,gameNameKey:gk,createdAt:Date.now(),scores:{blocks:0,defense:0,memory:0}};
+ const patch={}; patch[`players/${ik}`]=data; patch[`gameNames/${gk}`]=ik;
+ const res=await rtdbPatch('',patch);
+ if(!res.ok) throw new Error('Registration failed. Please try again.');
+ player={...data,uid:ik}; showApp();
 }
-function render(){
-  const arr=scores[current].slice(0,10),rows=document.getElementById("rows");
-  rows.innerHTML='<div class="row head"><span>#</span><span>PLAYER</span><span class="right">SCORE</span></div>';
-  arr.forEach((x,i)=>rows.insertAdjacentHTML("beforeend",
-    `<div class="row"><span>${i+1}</span><b>${esc(x.name||"Player")}</b><span class="right">${Number(x.score||0).toLocaleString()}</span></div>`));
-  document.getElementById("status").textContent=arr.length?`${arr.length} score ${arr.length===1?"entry":"entries"} shown`:"No scores yet — be the first!";
+async function login(){
+ const id=clean($('idName').value,10),ik=key(id);
+ if(!validName(id,10)) throw new Error('Enter your registered ID Name.');
+ $('authStatus').textContent='Loading your account…';
+ const p=await loadPlayerByIdName(ik);
+ if(!p) throw new Error('ID Name not found. Please check the name and try again.');
+ player=p; showApp();
 }
-document.querySelectorAll(".tabs button").forEach(b=>b.onclick=()=>{
-  document.querySelectorAll(".tabs button").forEach(x=>x.classList.remove("active"));
-  b.classList.add("active");current=b.dataset.game;render();
-});
-load();
+async function submitAuth(){try{mode==='register'?await register():await login()}catch(e){console.error(e);$('authStatus').textContent=String(e.message||e);$('authStatus').className='auth-status'}}
+function showApp(){ const old=getSession()||{}; setSession({...old,idName:player.idName,gameName:player.gameName,uid:player.uid,scores:player.scores||{blocks:0,defense:0,memory:0}}); $('auth').classList.add('hidden');$('app').hidden=false;$('welcome').textContent=`Welcome, ${player.gameName}! 👋`;$('accountLabel').textContent=`ID: ${player.idName} · GAME: ${player.gameName}`;load()}
+function logout(){clearSession();location.reload()}
+async function loadGame(game){const res=await fetch(`${RTDB_BASE_URL}/leaderboard/${game}.json?orderBy=%22score%22&limitToLast=10`);if(!res.ok)throw new Error(`${game} leaderboard read failed: ${res.status}`);const data=await res.json();return Object.values(data||{}).map(x=>({...x,game}))}
+async function load(){const status=$('status');status.textContent='Loading scores…';try{const [blocks,defense,memory]=await Promise.all([loadGame('blocks'),loadGame('defense'),loadGame('memory')]);scores={blocks,defense,memory};for(const g of Object.keys(scores))scores[g].sort((a,b)=>Number(b.score||0)-Number(a.score||0));const ids={blocks:['blocksTop','blocksName','blocksPersonal'],defense:['defTop','defName','defPersonal'],memory:['memoryTop','memoryName','memoryPersonal']};for(const g of Object.keys(scores)){const top=scores[g][0],[topId,nameId,personalId]=ids[g];$(topId).textContent=top?Number(top.score||0).toLocaleString():'—';$(nameId).textContent=top?`#1 ${esc(top.gameName||top.name||'Player')}`:'No scores yet';$(personalId).textContent=`Your best: ${Number(player?.scores?.[g]||0).toLocaleString()}`}const best=Object.values(player?.scores||{}).reduce((a,b)=>a+Number(b||0),0);$('total').textContent=best.toLocaleString();render()}catch(e){console.error(e);status.textContent='Leaderboard unavailable — check Firebase Realtime Database rules.'}}
+function render(){const arr=scores[current].slice(0,10),rows=$('rows');rows.innerHTML='<div class="row head"><span>#</span><span>PLAYER</span><span class="right">SCORE</span></div>';arr.forEach((x,i)=>rows.insertAdjacentHTML('beforeend',`<div class="row"><span>${i+1}</span><b>${esc(x.gameName||x.name||'Player')}</b><span class="right">${Number(x.score||0).toLocaleString()}</span></div>`));$('status').textContent=arr.length?`${arr.length} score ${arr.length===1?'entry':'entries'} shown`:'No scores yet — be the first!'}
+$('authSubmit').onclick=submitAuth;$('authSwitch').onclick=()=>setMode(mode==='register'?'login':'register');$('logout').onclick=logout;document.querySelectorAll('.tabs button').forEach(b=>b.onclick=()=>{document.querySelectorAll('.tabs button').forEach(x=>x.classList.remove('active'));b.classList.add('active');current=b.dataset.game;render()});
+if(session?.idName){loadPlayerByIdName(session.idName).then(p=>{if(p){player=p;showApp()}else{clearSession();setMode('login')}}).catch(e=>{console.error(e);clearSession();setMode('login')})}else setMode('register');
 </script>
 </body></html>

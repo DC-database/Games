@@ -1,0 +1,37 @@
+{
+  "rules": {
+    ".read": true,
+    ".write": false,
+
+    "leaderboard": {
+      "$game": {
+        ".read": true,
+        ".indexOn": ["score"],
+        "$scoreId": {
+          ".write": "!data.exists()",
+          ".validate": "newData.hasChildren(['idName','game','gameName','score','createdAt']) && newData.child('idName').isString() && newData.child('game').val() === $game && newData.child('gameName').isString() && newData.child('score').isNumber() && newData.child('score').val() >= 0 && newData.child('createdAt').isNumber()"
+        }
+      }
+    },
+
+    "players": {
+      "$idName": {
+        ".read": true,
+        ".write": "!data.exists()",
+        "scores": {
+          "$game": {
+            ".write": true,
+            ".validate": "newData.isNumber() && newData.val() >= 0"
+          }
+        }
+      }
+    },
+
+    "gameNames": {
+      "$nameKey": {
+        ".read": true,
+        ".write": "!data.exists() && newData.isString()"
+      }
+    }
+  }
+}

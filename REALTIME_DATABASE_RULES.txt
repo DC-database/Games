@@ -1,0 +1,21 @@
+IRWFLIX PLAY — Firebase Realtime Database
+
+The three games now use Firebase Realtime Database (RTDB), not Firestore.
+
+Firebase Console → Realtime Database → Rules:
+
+{
+  "rules": {
+    ".read": true,
+    ".write": true
+  }
+}
+
+Leaderboard paths:
+- /leaderboard/blocks
+- /leaderboard/defense
+- /leaderboard/memory
+
+Each submission creates a new child under the correct game path. The games read the highest scores from that path.
+
+IMPORTANT: These public rules allow anyone to read and write leaderboard data. They are suitable only for a casual public leaderboard. For a secure competitive leaderboard, use authentication and server-side score validation.
