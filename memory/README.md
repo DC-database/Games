@@ -8,7 +8,7 @@ Fixes from the previous deployment:
 - Includes all external sound WAV files.
 - Animal artwork is transparent artwork only; the game supplies the card shell.
 - No Firebase Authentication is used.
-- Firestore requests use the existing Firebase Web API key and the leaderboard project.
+- Scores use Firebase Realtime Database under `/leaderboard/memory`.
 - Timer: 60 seconds; correct pair +3 seconds; wrong pair -1 second.
 - Score remains separate from time.
 - Game Over automatically submits the run.

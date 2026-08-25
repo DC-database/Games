@@ -1,9 +1,9 @@
 
-const cfg={apiKey:"AIzaSyC2jNNzAkghmVE6KLOeGPtd3CCTzpw3qo",authDomain:"leaderboard-90b9b.firebaseapp.com",projectId:"leaderboard-90b9b",storageBucket:"leaderboard-90b9b.firebasestorage.app",messagingSenderId:"891059392275",appId:"1:891059392275:web:757305992c2d83d39214e6",measurementId:"G-RXNVYRFXC5"};
+const RTDB_GAME_PATH="leaderboard/memory";
 const $=id=>document.getElementById(id);
 const safe=s=>String(s??"").replace(/[<>&"]/g,"");
-let player=localStorage.getItem("irwflixPlayer")||localStorage.getItem("memoryPlayer")||"Player";
-if(!player||player==="Player"){player=prompt("Enter your player name","Player")||"Player";localStorage.setItem("irwflixPlayer",player)}
+let player=getSession()?.gameName||"";
+if(!getSession()?.uid || !player){ location.href="../"; }
 const levelSets=[
   // Level 1 — Farm Friends
   ["dog","cat","rabbit","chicken"],
@@ -221,36 +221,25 @@ async function finish(title="GAME OVER"){
   showGameOverOverlay(title,true);
   await submitScore(true);
 }
-async function firestoreFetch(url,options={}){
-  // This game intentionally uses unauthenticated Firestore REST access.
-  // Firestore Security Rules decide whether the request is allowed.
-  return fetch(url,options);
-}
 async function submitScore(auto=false){
   if(submitted)return;
   submitted=true;
   try{
-    const payload={fields:{
-      game:{stringValue:"memory"},
-      name:{stringValue:String(player)},
-      score:{integerValue:String(Number(score)||0)},
-      level:{integerValue:String(Number(level)||1)},
-      moves:{integerValue:String(Number(moves)||0)},
-      timeSeconds:{integerValue:String(Number(seconds)||0)},
-      createdAt:{integerValue:String(Date.now())}
-    }};
+    const session=getSession();
+    if(!session?.idName || !session?.gameName) throw new Error("PLAYER_NOT_LOGGED_IN");
+    const payload={game:"memory",idName:String(session.idName),uid:String(session.idName),gameName:String(session.gameName),name:String(session.gameName),score:Number(score)||0,level:Number(level)||1,moves:Number(moves)||0,timeSeconds:Number(seconds)||0,createdAt:Date.now()};
     const controller=new AbortController();
     const timeout=setTimeout(()=>controller.abort(),8000);
-    const res=await firestoreFetch("https://firestore.googleapis.com/v1/projects/leaderboard-90b9b/databases/(default)/documents/leaderboard?key="+encodeURIComponent(cfg.apiKey),{
-      method:"POST",
-      headers:{"Content-Type":"application/json"},
-      body:JSON.stringify(payload),
-      signal:controller.signal
-    });
+    const res=await rtdbPost(RTDB_GAME_PATH,payload,{signal:controller.signal});
+    if(res.ok){
+      const best=Number((getSession()?.scores||{})?.memory||0);
+      if((Number(score)||0)>best) await rtdbPut(`players/${String(session.idName).toLowerCase()}/scores/memory`,Number(score)||0);
+      const ss=getSession()||{}; ss.scores={...(ss.scores||{}),memory:Number(score)||0}; setSession(ss);
+    }
     clearTimeout(timeout);
     if(!res.ok){
       const detail=await res.text().catch(()=>"");
-      throw new Error("Firestore upload failed: HTTP "+res.status+" "+detail);
+      throw new Error("Realtime Database upload failed: HTTP "+res.status+" "+detail);
     }
     const status=$("saveStatus");
     if(status)status.textContent="✅ Score saved to the global leaderboard.";
@@ -260,10 +249,11 @@ async function submitScore(auto=false){
     console.error(e);
     submitted=false;
     const status=$("saveStatus");
-    if(status)status.textContent="⚠️ Score could not be saved. You can still play again.";
-    $("message").textContent="⚠️ Score could not be uploaded. Check the console for the Firestore response.";
+    if(status)status.textContent="⚠️ Score could not be saved. Check Firebase Realtime Database rules.";
+    $("message").textContent="⚠️ Score could not be uploaded. Check the console for the Firebase response.";
   }
 }
+
 $("newGame").onclick=()=>{playSound("click");if(gameOver){$("overlay").className="overlay hidden";level=1;setup()}else{level=1;setup()}};
 $("endRun").onclick=()=>{playSound("click");if(runStarted&&!gameOver)finish("GAME OVER");else if(!runStarted)$("message").textContent="Tap a card to start the 60-second run."};
 $("refresh").onclick=()=>{playSound("click");loadLeaderboard()};
@@ -282,25 +272,20 @@ async function loadLeaderboard(){
   const list=$("leaderboard");list.innerHTML="<li>Loading…</li>";
   try{
     const controller=new AbortController(); const to=setTimeout(()=>controller.abort(),8000);
-    const res=await firestoreFetch("https://firestore.googleapis.com/v1/projects/leaderboard-90b9b/databases/(default)/documents/leaderboard?key="+encodeURIComponent(cfg.apiKey)+"&pageSize=1000",{signal:controller.signal});
+    const res=await rtdbGet(RTDB_GAME_PATH,'?orderBy=%22score%22&limitToLast=10',{signal:controller.signal});
     clearTimeout(to);
-    if(!res.ok){
-      const detail=await res.text().catch(()=>"");
-      throw new Error("Firestore read failed: HTTP "+res.status+" "+detail);
-    }
+    if(!res.ok){const detail=await res.text().catch(()=>"");throw new Error("Realtime Database read failed: HTTP "+res.status+" "+detail);}
     const data=await res.json();
-    const rows=(data.documents||[]).map(d=>{
-      const f=d.fields||{};
-      return {game:f.game?.stringValue||"",name:f.name?.stringValue||"Player",score:Number(f.score?.integerValue||f.score?.doubleValue||0),level:Number(f.level?.integerValue||0),moves:Number(f.moves?.integerValue||0),timeSeconds:Number(f.timeSeconds?.integerValue||0)};
-    }).filter(x=>x.game==="memory");
+    const rows=Object.values(data||{}).map(x=>({game:x.game||"memory",name:x.gameName||x.name||"Player",score:Number(x.score||0),level:Number(x.level||0),moves:Number(x.moves||0),timeSeconds:Number(x.timeSeconds||0)}));
     rows.sort((a,b)=>Number(b.score||0)-Number(a.score||0));list.innerHTML="";
     rows.slice(0,10).forEach((x,i)=>{const li=document.createElement("li");li.innerHTML=`<b>${i+1}. ${safe(x.name||"Player")}</b><span class="lbscore">${Number(x.score||0).toLocaleString()}</span>`;list.appendChild(li)});
     if(!list.children.length)list.innerHTML="<li>No scores yet — be the first!</li>";
   }catch(e){
     console.error("Leaderboard error:",e);
-    list.innerHTML="<li>Leaderboard unavailable</li>";
+    list.innerHTML="<li>Leaderboard unavailable — check Firebase Realtime Database rules.</li>";
   }
 }
+
 function floatText(text,card,positive=true){const r=card.getBoundingClientRect(),e=document.createElement("div");e.className=`float ${positive?"positive":"negative"}`;e.textContent=text;e.style.left=(r.left+r.width/2-20)+"px";e.style.top=(r.top+r.height/2)+"px";document.body.appendChild(e);setTimeout(()=>e.remove(),900)}
 function burst(card){
   const r=(card||$("board")).getBoundingClientRect(),cx=r.left+r.width/2,cy=r.top+r.height/2;
