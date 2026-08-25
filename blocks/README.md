@@ -1,17 +1,14 @@
 # IRWFLIX PLAY — Blocks v31
 
 ## Score save fix
-- Firestore REST requests now include the Firebase Web API key for correct Firebase project routing.
-- POST score creation returns the actual Firestore error details to the browser console if it fails.
-- Leaderboard reads use the same Firebase API key.
-- No Firebase Authentication is added; access continues to be controlled by Firestore Security Rules.
+- Score saving now uses Firebase Realtime Database directly.
+- Scores are written under `/leaderboard/blocks`.
+- Leaderboard reads use RTDB.
+- No Firebase Authentication is added; access is controlled by Realtime Database Rules.
 - Game Over still auto-submits the score.
 
 ## Important Firebase Console check
-The API key used by the game must allow the Cloud Firestore API (`firestore.googleapis.com`). Firebase documents that direct REST access may require the Firebase API key to have the relevant Firebase/Google API enabled/restricted correctly.
-
-The expected Firestore collection is:
-`leaderboard`
+Configure Realtime Database Rules, not Firestore Rules. The expected RTDB path is `/leaderboard/blocks`.
 
 The game sends: `game`, `name`, `score`, `timeSeconds`, `stage`, `stageName`, `createdAt`.
 

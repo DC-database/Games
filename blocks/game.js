@@ -1,15 +1,4 @@
-const firebaseConfig={
- apiKey:"AIzaSyC2jNNzAkghm5VE6KLOeGPtd3CCTzpw3qo",
- authDomain:"leaderboard-90b9b.firebaseapp.com",
- projectId:"leaderboard-90b9b",
- storageBucket:"leaderboard-90b9b.firebasestorage.app",
- messagingSenderId:"891059392275",
- appId:"1:891059392275:web:757305992c2d83d39214e6",
- measurementId:"G-RXNVYRFXC5"
-};
-const FIRESTORE_URL="https://firestore.googleapis.com/v1/projects/leaderboard-90b9b/databases/(default)/documents/leaderboard";
-const FIREBASE_API_KEY=firebaseConfig.apiKey;
-const FIRESTORE_COLLECTION_URL=`${FIRESTORE_URL}?key=${encodeURIComponent(FIREBASE_API_KEY)}`;
+const RTDB_GAME_PATH="leaderboard/blocks";
 
 const N=10;
 const COLORS=["#ff4f9a","#8d62ff","#ff5b54","#39b8ff","#41d68a","#ffd34f","#27d5c7","#ff9d38"];
@@ -49,19 +38,19 @@ function unlockedShapes(){return SHAPES.slice(0,unlockedShapeCount());}
 let board=[],pieces=[],score=0,best=Number(localStorage.blocksBest||0);
 const START_TIME=120, MOVE_BONUS=3, STAGE_CLEAR_BONUS=30, MAX_TIME=180;
 let timeLeft=START_TIME, timerHandle=null, stage=1, stageClearCount=0;
-let player=(localStorage.blocksPlayer||"").trim();
+let player=(getSession()?.gameName||"").trim();
 let dragging=null,dragGhost=null,activePointerId=null,touchDragIndex=null,touchActive=false,clearAnimating=false,gameEnded=false;
 let runStartedAt=0, runSeconds=0, rushActive=false, rushUntil=0, rushTimer=null, comboCount=0, lastClearAt=0, submitted=false, audioCtx=null, audioEnabled=localStorage.blocksSound!=="off";
 
 const $=id=>document.getElementById(id);
 function ensurePlayer(){
- if(!player){
-   const entered=prompt("Enter your player name:","Player");
-   player=(entered||"Player").trim().slice(0,18)||"Player";
-   localStorage.blocksPlayer=player;
- }
+ const session=getSession();
+ if(!session?.idName || !session?.gameName){ location.href="../"; return false; }
+ player=String(session.gameName).trim();
  $("player").textContent=player;
+ return true;
 }
+
 const SFX_FILES={
  place:'assets/sfx/place.wav',
  clear:'assets/sfx/line-clear.wav',
@@ -501,36 +490,41 @@ function gameOver(reason='TIME'){
 function finishActiveRun(){gameOver('TIME');}
 
 async function submitScore(){
- const btn=null;
  if(submitted){$('submitStatus').textContent='Score already registered ✓';return;}
  $('submitStatus').textContent='Saving score…';
  try{
-  const payload={fields:{game:{stringValue:'blocks'},name:{stringValue:String(player)},score:{integerValue:String(Number(score)||0)},timeSeconds:{integerValue:String(Math.max(0,Math.floor(runSeconds)))},stage:{integerValue:String(stage)},stageName:{stringValue:stageName()},createdAt:{integerValue:String(Date.now())}}};
-  const res=await fetch(FIRESTORE_COLLECTION_URL,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
-  if(!res.ok){let detail='';try{detail=await res.text()}catch{};throw new Error(`Firestore upload failed: ${res.status} ${detail}`);}
+  const session=getSession();
+  if(!session?.idName || !session?.gameName) throw new Error('PLAYER_NOT_LOGGED_IN');
+  const payload={game:'blocks',idName:String(session.idName),uid:String(session.idName),gameName:String(session.gameName),name:String(session.gameName),score:Number(score)||0,timeSeconds:Math.max(0,Math.floor(runSeconds)),stage:Number(stage)||1,stageName:stageName(),createdAt:Date.now()};
+  const res=await rtdbPost(RTDB_GAME_PATH,payload);
+  if(res.ok){
+    const oldBest=Number(localStorage.blocksBest||0);
+    if((Number(score)||0)>oldBest){
+      await rtdbPut(`players/${String(session.idName).toLowerCase()}/scores/blocks`,Number(score)||0);
+      const ss=getSession()||{}; ss.scores={...(ss.scores||{}),blocks:Number(score)||0}; setSession(ss);
+      localStorage.blocksBest=Number(score)||0;
+    }
+  }
+  if(!res.ok){let detail='';try{detail=await res.text()}catch{};throw new Error(`Realtime Database upload failed: ${res.status} ${detail}`);}
   submitted=true;$('submitStatus').textContent='Score saved ✓';
   await loadLeaderboard(true);
- }catch(err){console.error(err);$('submitStatus').textContent='Could not save score. Check Firebase / Firestore API.';}
- finally{}
+ }catch(err){console.error(err);$('submitStatus').textContent='Could not save score. Check Firebase Realtime Database rules.';}
 }
 async function loadLeaderboard(updatePersonalBest=false){
  const status=$('lbStatus'),list=$('lbList');
  status.textContent='Loading scores…';
  try{
-  let url=FIRESTORE_COLLECTION_URL+'&pageSize=1000',all=[];
-  for(let page=0;page<10&&url;page++){
-   const res=await fetch(url);if(!res.ok)throw new Error('Firestore read failed: '+res.status);
-   const data=await res.json();
-   all.push(...(data.documents||[]));
-   url=data.nextPageToken?FIRESTORE_COLLECTION_URL+'&pageSize=1000&pageToken='+encodeURIComponent(data.nextPageToken):'';
-  }
-  const rows=all.map(d=>{const f=d.fields||{};return {game:f.game?.stringValue||'',name:f.name?.stringValue||'Player',score:Number(f.score?.integerValue||f.score?.doubleValue||0),timeSeconds:Number(f.timeSeconds?.integerValue||0),stage:Number(f.stage?.integerValue||0),stageName:f.stageName?.stringValue||''}}).filter(x=>x.game==='blocks');
-  const personal=rows.filter(x=>x.name===player);
+  const res=await rtdbGet(RTDB_GAME_PATH,'?orderBy=%22score%22&limitToLast=10');
+  if(!res.ok)throw new Error('Realtime Database read failed: '+res.status);
+  const data=await res.json();
+  const rows=Object.values(data||{}).map(x=>({game:x.game||'blocks',name:x.gameName||x.name||'Player',gameName:x.gameName||x.name||'Player',score:Number(x.score||0),timeSeconds:Number(x.timeSeconds||0),stage:Number(x.stage||0),stageName:x.stageName||'',uid:x.uid||''}));
+  const session=getSession();
+  const personal=rows.filter(x=>session?.idName && x.idName===session.idName);
   if(personal.length){const firebaseBest=Math.max(...personal.map(x=>x.score));best=Math.max(best,firebaseBest);localStorage.blocksBest=best;$('best').textContent=best.toLocaleString();}
   rows.sort((a,b)=>Number(b.score||0)-Number(a.score||0));list.innerHTML='';
   rows.slice(0,10).forEach((x,i)=>{const li=document.createElement('li');li.innerHTML=`<span>${i+1}</span><b>${escapeHtml(String(x.name||'Player'))}</b><span class="lb-score">${Number(x.score||0).toLocaleString()}</span>`;list.appendChild(li)});
   status.textContent=list.children.length?'Top 10':'No scores yet.';
- }catch(err){console.error(err);status.textContent='Leaderboard unavailable — check Firebase rules.';}
+ }catch(err){console.error(err);status.textContent='Leaderboard unavailable — check Firebase Realtime Database rules.';}
 }
 
 function escapeHtml(s){return s.replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[m]))}
@@ -560,7 +554,7 @@ window.addEventListener("pointercancel",e=>{
 window.addEventListener("contextmenu",e=>{if(dragging)e.preventDefault()});
 
 $("new").onclick=()=>newGame(false);$("again").onclick=()=>newGame(true);$("menu").onclick=()=>{location.href="../"};$("sound").onclick=toggleSound;$("refreshLB").onclick=loadLeaderboard;
-ensurePlayer();newGame(true);while(!hasAnyMove()){pieces=[makePiece(),makePiece(),makePiece()]}render();loadLeaderboard();
+if(!ensurePlayer()) throw new Error('Player login required');newGame(true);while(!hasAnyMove()){pieces=[makePiece(),makePiece(),makePiece()]}render();loadLeaderboard();
 
 
 /* v8: keep Android touch drag under game control */
