@@ -1,174 +1,52 @@
-const RTDB_GAME_PATH="leaderboard/blocks";
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-app.js";
+import { getFirestore, collection, addDoc, query, orderBy, limit, getDocs, serverTimestamp } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js";
+
+const firebaseConfig={
+ apiKey:"AIzaSyC2jNNzAk5ghmVE6KLOeGPtd3CCTzpw3qo",
+ authDomain:"leaderboard-90b9b.firebaseapp.com",
+ projectId:"leaderboard-90b9b",
+ storageBucket:"leaderboard-90b9b.firebasestorage.app",
+ messagingSenderId:"891059392275",
+ appId:"1:891059392275:web:757305992c2d83d39214e6",
+ measurementId:"G-RXNVYRFXC5"
+};
+const firebaseApp=initializeApp(firebaseConfig);
+const db=getFirestore(firebaseApp);
 
 const N=10;
 const COLORS=["#ff4f9a","#8d62ff","#ff5b54","#39b8ff","#41d68a","#ffd34f","#27d5c7","#ff9d38"];
-// Shape progression: keep the early game simple and introduce only a small
-// number of new shapes every 3 stages. The player learns the basic pieces
-// before the full shape pool becomes available.
 const SHAPES=[
- [[0,0],[1,0],[2,0],[3,0]], // I
- [[0,0],[0,1],[1,1],[2,1]], // L
- [[1,0],[0,1],[1,1],[2,1]], // T
- [[0,0],[1,0],[0,1],[1,1]], // O
- [[0,0],[1,0],[1,1],[2,1]], // S
- [[0,0],[0,1],[0,2],[1,2]], // J
- [[0,0],[1,0],[2,0],[2,1],[2,2]], // long L / 5-block
- [[0,0],[0,1],[1,1],[2,1],[2,2]], // long Z / 5-block
- [[0,0],[1,0],[2,0],[1,1]], // 3-wide T
- [[0,0],[1,0],[2,0],[0,1],[1,1],[2,1]], // 6-box rectangle: 3x2 landscape (rotates to 2x3 portrait)
- [[0,0],[1,0],[2,0],[0,1],[1,1],[2,1],[0,2],[1,2],[2,2]] // 9-box square: 3x3
+ [[0,0],[1,0],[2,0],[3,0]],
+ [[0,0],[0,1],[1,1],[2,1]],
+ [[1,0],[0,1],[1,1],[2,1]],
+ [[0,0],[1,0],[0,1],[1,1]],
+ [[0,0],[1,0],[1,1],[2,1]],
+ [[0,0],[0,1],[0,2],[1,2]],
+ [[0,0],[1,0],[2,0],[2,1],[2,2]],
+ [[0,0],[0,1],[1,1],[2,1],[2,2]],
+ [[0,0],[1,0],[2,0],[1,1]]
 ];
 
-// Stage 1-3: 4 familiar shapes
-// Stage 4-6: +1 shape
-// Stage 7-9: +1 shape
-// Stage 10-12: +1 shape
-// Stage 13-15: +1 shape
-// Stage 16-18: +1 shape
-// Stage 19-21: +1 shape (6-box rectangle, appears landscape or portrait)
-// Stage 22-24: +1 shape (9-box square)
-// Stage 25+: full pool
-const SHAPE_UNLOCK_EVERY=3;
-const STARTING_SHAPES=4;
-function unlockedShapeCount(){
- return Math.min(SHAPES.length, STARTING_SHAPES + Math.floor((Math.max(1,stage)-1)/SHAPE_UNLOCK_EVERY));
-}
-function unlockedShapes(){return SHAPES.slice(0,unlockedShapeCount());}
-
 let board=[],pieces=[],score=0,best=Number(localStorage.blocksBest||0);
-const START_TIME=120, MOVE_BONUS=3, STAGE_CLEAR_BONUS=30, MAX_TIME=180;
-let timeLeft=START_TIME, timerHandle=null, stage=1, stageClearCount=0;
-let player=(getSession()?.gameName||"").trim();
+let player=(localStorage.blocksPlayer||"").trim();
 let dragging=null,dragGhost=null,activePointerId=null,touchDragIndex=null,touchActive=false,clearAnimating=false,gameEnded=false;
-let runStartedAt=0, runSeconds=0, rushActive=false, rushUntil=0, rushTimer=null, comboCount=0, lastClearAt=0, submitted=false, audioCtx=null, audioEnabled=localStorage.blocksSound!=="off";
 
 const $=id=>document.getElementById(id);
 function ensurePlayer(){
- const session=getSession();
- if(!session?.idName || !session?.gameName){ location.href="../"; return false; }
- player=String(session.gameName).trim();
- $("player").textContent=player;
- return true;
-}
-
-const SFX_FILES={
- place:'assets/sfx/place.wav',
- clear:'assets/sfx/line-clear.wav',
- bonus:'assets/sfx/time-bonus.wav',
- stage:'assets/sfx/stage-clear.wav',
- warning:'assets/sfx/warning.wav',
- tick:'assets/sfx/countdown-tick.wav',
- gameover:'assets/sfx/game-over.wav',
- click:'assets/sfx/click.wav'
-};
-const audioPool={};
-function initAudio(){
- if(!audioEnabled)return;
- try{
-  if(!audioCtx)audioCtx=new (window.AudioContext||window.webkitAudioContext)();
-  if(audioCtx.state==='suspended')audioCtx.resume();
-  Object.keys(SFX_FILES).forEach(name=>{
-   if(!audioPool[name]){
-    const a=new Audio(SFX_FILES[name]);
-    a.preload='auto'; a.volume=.55;
-    audioPool[name]=a;
-   }
-  });
- }catch(_){ }
-}
-function tone(freq,duration=0.08,type='sine',gain=0.045,delay=0){
- if(!audioEnabled)return;
- try{
-  if(!audioCtx)return;
-  const o=audioCtx.createOscillator(),g=audioCtx.createGain();
-  o.type=type;o.frequency.value=freq;
-  g.gain.setValueAtTime(0.0001,audioCtx.currentTime+delay);
-  g.gain.exponentialRampToValueAtTime(gain,audioCtx.currentTime+delay+0.01);
-  g.gain.exponentialRampToValueAtTime(0.0001,audioCtx.currentTime+delay+duration);
-  o.connect(g).connect(audioCtx.destination);
-  o.start(audioCtx.currentTime+delay);o.stop(audioCtx.currentTime+delay+duration+0.02);
- }catch(_){ }
-}
-function fallbackSfx(name){
- const map={
-  place:[[420,.06,'sine',.035,0]],
-  clear:[[520,.08,'triangle',.05,0],[740,.1,'triangle',.05,.07]],
-  bonus:[[660,.08,'sine',.05,0],[880,.1,'sine',.05,.08],[1100,.14,'triangle',.055,.17]],
-  stage:[[440,.1,'triangle',.045,0],[660,.1,'triangle',.05,.1],[990,.18,'triangle',.06,.2]],
-  warning:[[240,.08,'square',.03,0],[240,.08,'square',.03,.18]],
-  tick:[[700,.045,'square',.025,0]],
-  gameover:[[220,.16,'sawtooth',.05,0],[150,.22,'sawtooth',.045,.16]],
-  click:[[380,.045,'sine',.025,0]]
- };
- (map[name]||[]).forEach(a=>tone(...a));
-}
-function sfx(name){
- if(!audioEnabled)return;
- initAudio();
- const base=audioPool[name];
- if(base){
-  try{
-   const a=base.cloneNode(true); a.volume=base.volume; a.currentTime=0;
-   const p=a.play(); if(p&&p.catch)p.catch(()=>fallbackSfx(name));
-   return;
-  }catch(_){ }
+ if(!player){
+   const entered=prompt("Enter your player name:","Player");
+   player=(entered||"Player").trim().slice(0,18)||"Player";
+   localStorage.blocksPlayer=player;
  }
- fallbackSfx(name);
+ $("player").textContent=player;
 }
-function toggleSound(){
- audioEnabled=!audioEnabled;localStorage.blocksSound=audioEnabled?'on':'off';
- $('sound').textContent=audioEnabled?'🔊':'🔇'; if(audioEnabled){initAudio();sfx('click');}
-}
-function startRun(){
- if(gameEnded)return;
- if(!runStartedAt){runStartedAt=Date.now();startTimer();sfx('click');}
-}
-function startTimer(){
- stopRunClock();
- timerHandle=setInterval(()=>{
-   if(gameEnded)return;
-   timeLeft=Math.max(0,timeLeft-0.1);
-   updateTimerUI();
-   if(timeLeft<=0){timeLeft=0;updateTimerUI();gameOver('TIME');}
- },100);
- updateTimerUI();
-}
-function updateTimerUI(){
- const sec=Math.ceil(timeLeft);
- const m=Math.floor(sec/60),s=sec%60;
- const text=`${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
- $('timer').textContent=text;
- $('timer').classList.toggle('danger',sec<=10);
- $('timer').classList.toggle('warning',sec<=30&&sec>10);
- if(sec>0&&sec<=10&&sec!==updateTimerUI.lastSec){sfx(sec<=5?'tick':'warning');updateTimerUI.lastSec=sec;}
-}
-function addTime(seconds,label){
- const before=timeLeft;timeLeft=Math.min(MAX_TIME,timeLeft+seconds);
- updateTimerUI();
- const toast=document.createElement('div');toast.className='time-bonus';toast.textContent=`+${Math.round(timeLeft-before)} SEC`;
- document.body.appendChild(toast);setTimeout(()=>toast.remove(),1000);
- sfx(seconds>=20?'bonus':'place');
-}
-function stopRunClock(){
- if(timerHandle){clearInterval(timerHandle);timerHandle=null;}
- if(rushTimer){clearInterval(rushTimer);rushTimer=null;}
-}
-function runBucket(){
- const elapsed=START_TIME-Math.floor(timeLeft);
- if(elapsed<120)return 'under_2_minutes';
- if(elapsed<300)return 'under_5_minutes';
- return '5_plus_minutes';
-}
-function updateRushUI(){}
-function scoreMultiplier(){return stage>=5?2:stage>=3?1.5:1;}
 function rotate(shape){
  let a=shape.map(([x,y])=>[y,-x]);
  let minX=Math.min(...a.map(p=>p[0])),minY=Math.min(...a.map(p=>p[1]));
  return a.map(([x,y])=>[x-minX,y-minY]);
 }
 function makePiece(){
- const pool=unlockedShapes();
- let shape=pool[Math.floor(Math.random()*pool.length)].map(p=>p.slice());
+ let shape=SHAPES[Math.floor(Math.random()*SHAPES.length)].map(p=>p.slice());
  for(let i=Math.floor(Math.random()*4);i--;)shape=rotate(shape);
  return {shape,color:COLORS[Math.floor(Math.random()*COLORS.length)],used:false};
 }
@@ -266,7 +144,6 @@ function beginDrag(index,e){
  const p=pieces[index];
  if(!p||p.used)return;
  e.preventDefault();
- startRun();
  dragging=p;
  activePointerId=e.pointerId;
  makeDragGhost(p);
@@ -304,24 +181,11 @@ function endDrag(e){
  p.used=true;
 
  const lines=findCompletedLines();
- const now=Date.now();
- if(lines.count){
-   comboCount=(now-lastClearAt<5000)?comboCount+1:1;
-   lastClearAt=now;
- }else{
-   comboCount=0;
- }
  let gained=p.shape.length*10;
  if(lines.count)gained+=lines.count===1?100:lines.count===2?250:500+lines.count*100;
- if(comboCount>1)gained+=Math.min(1000,(comboCount-1)*150);
- const mult=scoreMultiplier();
- gained*=mult;
- score+=Math.round(gained);
- gained=Math.round(gained);
- addTime(MOVE_BONUS,"+3 SEC");
+
+ score+=gained;
  best=Math.max(best,score);localStorage.blocksBest=best;
- sfx(lines.count?"clear":"place");
- $('combo').textContent=`COMBO ×${Math.max(1,comboCount||1)}${mult>1?'  ⚡×2':''}`;
 
  if(dragGhost)dragGhost.remove();
  dragGhost=null;clearPreview();dragging=null;activePointerId=null;
@@ -333,20 +197,10 @@ function endDrag(e){
    animateClearCells(lines.cells,()=>{
      removeCompletedLines(lines);
      celebrateClear(gained,lines.count,lines.cells);
-     if(isBoardEmpty()){
-       stageClearCount++;
-       const bonus=500+stage*250;
-       score+=bonus;
-       addTime(STAGE_CLEAR_BONUS,"+30 SEC");
-       stage++;
-       sfx('stage');
-       showStageTransition(bonus);
-     } else {
-       $("message").textContent=`🎉 ${lines.count} line${lines.count>1?"s":""} cleared!`;
-     }
+     $("message").textContent=`🎉 ${lines.count} line${lines.count>1?"s":""} cleared!`;
      if(pieces.every(x=>x.used))pieces=[makePiece(),makePiece(),makePiece()];
      render();
-     if(!hasAnyMove())gameOver('NO_MOVES');
+     if(!hasAnyMove())gameOver();
    });
  }else{
    if(pieces.every(x=>x.used))pieces=[makePiece(),makePiece(),makePiece()];
@@ -419,16 +273,6 @@ function animateClearCells(cells,done){
  setTimeout(done,300);
 }
 
-function isBoardEmpty(){return board.every(row=>row.every(cell=>!cell));}
-function showStageTransition(bonus){
- document.body.dataset.stage=String(stage);
- const el=document.createElement('div');el.className='stage-transition';
- el.innerHTML=`<small>AREA CLEARED</small><strong>STAGE ${stage}</strong><span>+${bonus.toLocaleString()} POINTS</span><em>NEW AREA</em>`;
- document.body.appendChild(el);setTimeout(()=>el.remove(),1700);
- $('message').textContent=`🌍 Stage ${stage} — new area! ${unlockedShapeCount()} shapes available.`;
-}
-function stageName(){const names=['CITY','FOREST','DESERT','ICE','VOLCANO','NEON CITY','SPACE','UNKNOWN'];return names[Math.min(stage-1,names.length-1)];}
-
 function findCompletedLines(){
  let rows=[],cols=[],cells=[];
  for(let r=0;r<N;r++)if(board[r].every(Boolean))rows.push(r);
@@ -450,7 +294,7 @@ function miniFor(sh,x,y,color){
  return m;
 }
 function render(){
- ensurePlayer();$("score").textContent=score.toLocaleString();$("best").textContent=best.toLocaleString();$("stage").textContent=`STAGE ${stage} · ${stageName()}`;updateTimerUI();$("sound").textContent=audioEnabled?"🔊":"🔇";document.body.dataset.stage=String(stage);
+ ensurePlayer();$("score").textContent=score.toLocaleString();$("best").textContent=best.toLocaleString();
  const b=$("board");b.innerHTML="";
  for(let r=0;r<N;r++)for(let c=0;c<N;c++){
   const e=document.createElement("div");e.className="cell";e.dataset.r=r;e.dataset.c=c;
@@ -473,68 +317,41 @@ function render(){
 function hasAnyMove(){
  return pieces.some(p=>!p.used&&board.some((row,r)=>row.some((_,c)=>fit(p.shape,r,c))));
 }
-function gameOver(reason='TIME'){
+function gameOver(){
  if(gameEnded)return;
- gameEnded=true;stopRunClock();
- runSeconds=Math.max(0,START_TIME-Math.ceil(timeLeft));
- if(dragGhost)dragGhost.remove();dragGhost=null;dragging=null;activePointerId=null;clearPreview();
- document.querySelectorAll('.piece.selected').forEach(e=>e.classList.remove('selected'));
- $('final').textContent=score.toLocaleString();$('overBest').textContent=best.toLocaleString();
- $('overTitle').textContent='GAME OVER';
- $('runSummary').innerHTML=`<b>STAGE ${stage} · ${stageName()}</b><br>${reason==='TIME'?'TIME EXPIRED':'NO MORE MOVES'} · ${Math.floor(runSeconds)}s`;
- $('submitStatus').textContent='Saving your score…';
- $('over').classList.add('show');
- sfx('gameover');render();
- submitScore();
-}
-function finishActiveRun(){gameOver('TIME');}
-
-async function submitScore(){
- if(submitted){$('submitStatus').textContent='Score already registered ✓';return;}
- $('submitStatus').textContent='Saving score…';
- try{
-  const session=getSession();
-  if(!session?.idName || !session?.gameName) throw new Error('PLAYER_NOT_LOGGED_IN');
-  const payload={game:'blocks',idName:String(session.idName),uid:String(session.idName),gameName:String(session.gameName),name:String(session.gameName),score:Number(score)||0,timeSeconds:Math.max(0,Math.floor(runSeconds)),stage:Number(stage)||1,stageName:stageName(),createdAt:Date.now()};
-  const res=await rtdbPost(RTDB_GAME_PATH,payload);
-  if(res.ok){
-    const oldBest=Number(localStorage.blocksBest||0);
-    if((Number(score)||0)>oldBest){
-      await rtdbPut(`players/${String(session.idName).toLowerCase()}/scores/blocks`,Number(score)||0);
-      const ss=getSession()||{}; ss.scores={...(ss.scores||{}),blocks:Number(score)||0}; setSession(ss);
-      localStorage.blocksBest=Number(score)||0;
-    }
-  }
-  if(!res.ok){let detail='';try{detail=await res.text()}catch{};throw new Error(`Realtime Database upload failed: ${res.status} ${detail}`);}
-  submitted=true;$('submitStatus').textContent='Score saved ✓';
-  await loadLeaderboard(true);
- }catch(err){console.error(err);$('submitStatus').textContent='Could not save score. Check Firebase Realtime Database rules.';}
-}
-async function loadLeaderboard(updatePersonalBest=false){
- const status=$('lbStatus'),list=$('lbList');
- status.textContent='Loading scores…';
- try{
-  const res=await rtdbGet(RTDB_GAME_PATH,'?orderBy=%22score%22&limitToLast=10');
-  if(!res.ok)throw new Error('Realtime Database read failed: '+res.status);
-  const data=await res.json();
-  const rows=Object.values(data||{}).map(x=>({game:x.game||'blocks',name:x.gameName||x.name||'Player',gameName:x.gameName||x.name||'Player',score:Number(x.score||0),timeSeconds:Number(x.timeSeconds||0),stage:Number(x.stage||0),stageName:x.stageName||'',uid:x.uid||''}));
-  const session=getSession();
-  const personal=rows.filter(x=>session?.idName && x.idName===session.idName);
-  if(personal.length){const firebaseBest=Math.max(...personal.map(x=>x.score));best=Math.max(best,firebaseBest);localStorage.blocksBest=best;$('best').textContent=best.toLocaleString();}
-  rows.sort((a,b)=>Number(b.score||0)-Number(a.score||0));list.innerHTML='';
-  rows.slice(0,10).forEach((x,i)=>{const li=document.createElement('li');li.innerHTML=`<span>${i+1}</span><b>${escapeHtml(String(x.name||'Player'))}</b><span class="lb-score">${Number(x.score||0).toLocaleString()}</span>`;list.appendChild(li)});
-  status.textContent=list.children.length?'Top 10':'No scores yet.';
- }catch(err){console.error(err);status.textContent='Leaderboard unavailable — check Firebase Realtime Database rules.';}
-}
-
-function escapeHtml(s){return s.replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[m]))}
-function newGame(force=false){
- if(!force && runStartedAt && !gameEnded && score>0){finishActiveRun();return;}
- stopRunClock();
+ gameEnded=true;
  if(dragGhost)dragGhost.remove();
- gameEnded=false;submitted=false;dragGhost=null;board=Array.from({length:N},()=>Array(N).fill(null));pieces=[makePiece(),makePiece(),makePiece()];score=0;runStartedAt=0;runSeconds=0;timeLeft=START_TIME;stage=1;stageClearCount=0;rushActive=false;comboCount=0;lastClearAt=0;dragging=null;stopRunClock();
- document.body.dataset.stage='1';$("over").classList.remove("show");$("submitStatus").textContent="";$("message").textContent="Press and hold a piece, then drag it onto the board.";$("combo").textContent="COMBO ×1";render();
+ dragGhost=null;dragging=null;activePointerId=null;clearPreview();
+ document.querySelectorAll(".piece.selected").forEach(e=>e.classList.remove("selected"));
+ $("final").textContent=score.toLocaleString();
+ $("message").textContent="No more moves. Game over.";
+ $("over").classList.add("show");
+ $("submitStatus").textContent="";
+ render();
 }
+async function submitScore(){
+ const btn=$("submit");btn.disabled=true;$("submitStatus").textContent="Submitting…";
+ try{
+  await addDoc(collection(db,"leaderboard"),{game:"blocks",name:player,score:Number(score),createdAt:serverTimestamp()});
+  $("submitStatus").textContent="Score submitted ✓";loadLeaderboard();
+ }catch(err){
+  console.error(err);$("submitStatus").textContent="Leaderboard unavailable. Check Firebase rules.";
+ }finally{btn.disabled=false}
+}
+async function loadLeaderboard(){
+ const status=$("lbStatus"),list=$("lbList");
+ try{
+  const q=query(collection(db,"leaderboard"),limit(200)),snap=await getDocs(q);
+  const rows=[];
+  snap.forEach(d=>{const x=d.data();if(x.game==="blocks")rows.push(x)});
+  rows.sort((a,b)=>Number(b.score||0)-Number(a.score||0));
+  list.innerHTML="";let i=1;
+  rows.slice(0,10).forEach(x=>{const li=document.createElement("li");li.innerHTML=`<span>${i++}</span><b>${escapeHtml(String(x.name||"Player"))}</b><span class="lb-score">${Number(x.score||0).toLocaleString()}</span>`;list.appendChild(li)});
+  status.textContent=list.children.length?"Top 10":"No scores yet.";
+ }catch(err){console.error(err);status.textContent="Leaderboard not connected yet."}
+}
+function escapeHtml(s){return s.replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[m]))}
+function newGame(){if(dragGhost)dragGhost.remove();gameEnded=false;dragGhost=null;board=Array.from({length:N},()=>Array(N).fill(null));pieces=[makePiece(),makePiece(),makePiece()];score=0;dragging=null;$("over").classList.remove("show");$("message").textContent="Press and hold a piece, then drag it onto the board.";render()}
 
 window.addEventListener("pointermove",e=>{
  if(!dragging || e.pointerId!==activePointerId)return;
@@ -553,8 +370,8 @@ window.addEventListener("pointercancel",e=>{
 },{passive:false});
 window.addEventListener("contextmenu",e=>{if(dragging)e.preventDefault()});
 
-$("new").onclick=()=>newGame(false);$("again").onclick=()=>newGame(true);$("menu").onclick=()=>{location.href="../"};$("sound").onclick=toggleSound;$("refreshLB").onclick=loadLeaderboard;
-if(!ensurePlayer()) throw new Error('Player login required');newGame(true);while(!hasAnyMove()){pieces=[makePiece(),makePiece(),makePiece()]}render();loadLeaderboard();
+$("new").onclick=newGame;$("again").onclick=newGame;$("submit").onclick=submitScore;$("refreshLB").onclick=loadLeaderboard;
+ensurePlayer();newGame();if(!hasAnyMove())gameOver();loadLeaderboard();
 
 
 /* v8: keep Android touch drag under game control */
