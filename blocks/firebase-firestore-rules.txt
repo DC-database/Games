@@ -1,0 +1,22 @@
+// Firestore rules for the public casual Blocks leaderboard.
+// Firebase Console → Firestore Database → Rules.
+// This intentionally does NOT use authentication.
+// Anyone can submit a score; this is suitable for a casual leaderboard,
+// not an anti-cheat competitive leaderboard.
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /leaderboard/{docId} {
+      allow read: if true;
+      allow create: if
+        request.resource.data.game == 'blocks' &&
+        request.resource.data.name is string &&
+        request.resource.data.name.size() >= 1 &&
+        request.resource.data.name.size() <= 18 &&
+        request.resource.data.score is number &&
+        request.resource.data.score >= 0 &&
+        request.resource.data.score <= 100000000;
+      allow update, delete: if false;
+    }
+  }
+}
